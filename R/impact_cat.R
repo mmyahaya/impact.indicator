@@ -23,11 +23,11 @@ impact_cat<-function(data,
   } else {stop("`fun` should be max, min or mean character")}
   
   category_M = data %>% 
-    mutate(impact_category=substr(impact_category,1,2)) %>% 
-    filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>% 
-    select(scientific_name,
+    dplyr::mutate(impact_category=substr(impact_category,1,2)) %>% 
+    dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>% 
+    dplyr::select(scientific_name,
            impact_category) %>% 
-    mutate(category_value = case_when(
+    dplyr::mutate(category_value = case_when(
       impact_category == "MC" ~ 0,
       impact_category == "MN" ~1,
       impact_category == "MO" ~2,
@@ -35,21 +35,25 @@ impact_cat<-function(data,
       impact_category == "MV" ~4,
       TRUE ~ 0  # Default case, if any value falls outside the specified ranges
     )) %>% 
-    group_by(scientific_name,impact_category) %>%
-    #choose the first trait value if there are multiples trait for a species
-    summarise(across(category_value, first), .groups = "drop") %>% 
-    # reshape to wide format to have specie by trait dataframe
-    pivot_wider(names_from = impact_category, values_from = category_value) %>% 
-    # select species that are only present in gbif data
-    filter(scientific_name %in% species_list) %>% 
-    #convert species names to row names
-    column_to_rownames(var = "scientific_name") 
+    dplyr::group_by(scientific_name,impact_category) %>%
+    
+    dplyr::summarise("impact"=across(category_value, first),
+                     "frequency"= across(category_value, length),
+                     .groups = "drop") %>% 
+   
+    tidyr::pivot_wider(names_from = impact_category, 
+                       values_from = c(impact,frequency)) %>% 
+   
+    dplyr::filter(scientific_name %in% species_list) %>% 
+   
+    tibble::column_to_rownames(var = "scientific_name") 
   
   
   category_M<-data.frame("fun"=apply(category_M,1,f))
   #names(category_M)<-fun
   na.df<-as.data.frame(matrix(NA,
-                              nrow = length(setdiff(species_list,rownames(category_M))),
+                              nrow = length(setdiff(species_list,
+                                                    rownames(category_M))),
                               ncol = ncol(category_M)))
   row.names(na.df)<-setdiff(species_list,rownames(category_M))
   names(na.df)<-names(category_M) # column names
@@ -57,8 +61,13 @@ impact_cat<-function(data,
   category_M <- category_M %>%
     dplyr::mutate(rowname = row.names(.)) %>%  
     dplyr::arrange(rowname) %>%               
-    dplyr::select(-rowname)                    
+    dplyr::select(-rowname)  
+  
+  
   return(category_M)
   
   
 }
+
+
+impact_cat(Combined_eicat_data,species_list)
