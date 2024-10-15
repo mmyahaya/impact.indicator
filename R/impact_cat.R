@@ -1,8 +1,8 @@
 impact_cat<-function(data,
-                       species_list,
-                       col_impact=NULL,
-                       col_name=NULL,
-                       fun="max"){
+                     species_list,
+                     col_impact=NULL,
+                     col_name=NULL,
+                     fun="max"){
   
   
   if(all(c("impact_category","scientific_name")%in%names(data))){
@@ -49,25 +49,31 @@ impact_cat<-function(data,
     tibble::column_to_rownames(var = "scientific_name") 
   
   
-  category_M<-data.frame("fun"=apply(category_M,1,f))
-  #names(category_M)<-fun
+  df_impact <- category_M %>% 
+    select(starts_with("impact"))
+  
+  impact_matrix<-as.data.frame(apply(df_impact,1,f))
+  
   na.df<-as.data.frame(matrix(NA,
                               nrow = length(setdiff(species_list,
-                                                    rownames(category_M))),
-                              ncol = ncol(category_M)))
-  row.names(na.df)<-setdiff(species_list,rownames(category_M))
-  names(na.df)<-names(category_M) # column names
-  category_M<-rbind(category_M,na.df)
-  category_M <- category_M %>%
+                                                    rownames(impact_matrix))),
+                              ncol = ncol(impact_matrix)))
+  row.names(na.df)<-setdiff(species_list,rownames(impact_matrix))
+  names(na.df)<-names(impact_matrix) # column names
+  impact_matrix<-rbind(impact_matrix,na.df)
+  impact_matrix <- impact_matrix %>%
     dplyr::mutate(rowname = row.names(.)) %>%  
     dplyr::arrange(rowname) %>%               
     dplyr::select(-rowname)  
+
   
+  # df_frquency <- category_M %>% 
+  #   select(starts_with("frequency"))
   
-  return(category_M)
+  return(impact_matrix)
   
   
 }
 
 
-impact_cat(Combined_eicat_data,species_list)
+#impact_cat(Combined_eicat_data,species_list)
