@@ -1,5 +1,5 @@
 # install.packages("devtools")
-devtools::install_github("b-cubed-eu/b3gbi")
+#devtools::install_github("b-cubed-eu/b3gbi")
 
 
 sbs.fun<-function(y){
@@ -21,8 +21,6 @@ sbs.taxon_list<-map(period,sbs.fun)
 
 impact_values<-c()
 for(y in period){
-
-
   #sbs.taxon_list[[paste0("year","_",y)]]<-sbs.taxon
   sbs.taxon<-sbs.fun(y)
 
@@ -48,7 +46,8 @@ for(y in period){
       total_native_obs = sum(obs[introduction_status == "native"], na.rm = TRUE),
       .groups = "drop"
     ) %>%
-    dplyr::mutate(dplyr::across(c(total_intro_obs, total_native_obs), ~ ifelse(.==0,NA,.))) %>%
+    dplyr::mutate(dplyr::across(c(total_intro_obs, total_native_obs),
+                                ~ ifelse(.==0,NA,.))) %>%
     dplyr::mutate(intro_native=total_intro_obs/total_native_obs) %>%
     dplyr::arrange(cellCode)
   if (!exists("eicat_score_list")){
@@ -66,63 +65,8 @@ for(y in period){
   impact_values<-c(impact_values,impact)
 }
 
-impact_values<-c()
 
 
-species_list<-unique(names(sbs.taxon))
-
-
-taxon_status_list<-taxon_status(species_list = full_species_list,
-                                source = "WCVP",
-                                region = "South Africa")
-
-
-test_data<-data.frame(name=species_list[1:100],
-                      status=sample(c("introduced","native"),100,replace = T))
-
-taxon_status_list<-taxon_status(species_list = species_list,
-                                source = "manual",
-                                status_data = test_data)
-
-
-
-intro.sf<-taxa_cube$data %>%
-  filter(year==y) %>%
-  left_join(taxa_list_status,
-            by = c("scientificName" = "taxon"))
-
-
-status.sf <- intro.sf %>%
-  group_by(cellCode) %>%
-  summarise(
-    total_intro_obs = sum(obs[introduction_status == "introduced"], na.rm = TRUE),
-    total_native_obs = sum(obs[introduction_status == "native"], na.rm = TRUE),
-    .groups = "drop"
-  ) %>%
-  mutate(across(c(total_intro_obs, total_native_obs), ~ ifelse(.==0,NA,.))) %>%
-  mutate(intro_native=total_intro_obs/total_native_obs) %>%
-  arrange(cellCode)
-
-
-#intro.sf<-left_join(intro.sf,status.sf, by="cellCode")
-
-
-
-eicat_score=eicat_impact(eicat_data = eicat_data,species_list = species_list,
-                         fun="max")
-eicat<-eicat_score[species_list,]
-
-siteScore<-status.sf$intro_native
-
-abdundance_impact = sweep(sbs.taxon,2,eicat,FUN = "*")
-impactScore = siteScore*abdundance_impact
-impact<-sum(impactScore,na.rm = TRUE)
-
-# specieImpact<-colSums(impactScore,na.rm = TRUE)
-# specieImpact<-specieImpact[specieImpact>0]
-#
-# siteImpact<-rowSums(impactScore,na.rm = TRUE)
-# siteImpact<-siteImpact[siteImpact>0]
 
 
 
