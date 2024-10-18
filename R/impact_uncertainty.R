@@ -67,14 +67,6 @@ my_fun<-function(x,y){
   return(indices)
 }
 
-
-
-
-
-
-
-
-
 fun=my_fun
 samples<-10
 bootstrap_list <- map(period[-c(1:12)],sbs.fun) %>% 
