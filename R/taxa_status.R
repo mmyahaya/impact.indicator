@@ -1,11 +1,11 @@
 taxa_status<-function(species_list,
-                       source="manual",
+                       status_source="manual",
                        status_data=NULL,
                        region=NULL,
                        col_scientificName=NULL,
                        col_introductionStatus=NULL){
 
-  if(source=="WCVP"){
+  if(status_source=="WCVP"){
     if(is.null(region)){
       stop("region needs to be specified for WCVP")
     } else
@@ -24,9 +24,9 @@ taxa_status<-function(species_list,
                                             "native","introduced"))
     }
 
-  } else if (source=="manual"){
+  } else if (status_source=="manual"){
     if(is.null(status_data)){
-      stop("status_data needs to be provided for `manual` source")
+      stop("status_data needs to be provided for `manual` status_source")
     } else if ("data.frame" %in% class(status_data)){
       #check if required column are present in the status_data
       if(all(c("scientificName","introductionStatus")%in%names(status_data))){
@@ -58,7 +58,7 @@ taxa_status<-function(species_list,
       }
       else {stop("both `col_scientificName` and `col_introductionStatus` not found in `status_data` nor specified ")}
     } else{ stop("status_data must be a dataframe")}
-  } else {stop("`source` should either be WCVP or manual")}
+  } else {stop("`status_source` should either be WCVP or manual")}
 
 
   return(taxa_list_status)
