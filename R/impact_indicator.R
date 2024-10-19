@@ -84,7 +84,7 @@ impact_indicator<-function(cube,
 
 
 
-impact_value<-impact_indicator(cube=cube,
+impact_value<-impact_indicator(cube=taxa_cube,
                            status_source="WCVP",
                            status_data=NULL,
                            region="South Africa",
@@ -101,6 +101,7 @@ system.time(
     period=unique(cube$data$year)
 
     impact_values<-c()
+    species_values<-data.frame()
     for(y in period){
       sbs.taxon<-cube$data %>%
         dplyr::filter(year==y) %>%
@@ -158,10 +159,37 @@ system.time(
       impactScore = siteScore*abdundance_impact
       impact<-sum(impactScore,na.rm = TRUE)
       impact_values<-rbind(impact_values,c(y,impact))
+      
+     impact_species <- eicat_score_list %>% 
+        na.omit() %>% 
+        rownames()
+     
+     speciesScore<-colSums(impactScore,na.rm = TRUE) %>% 
+       as.data.frame() %>% 
+       t() %>% 
+       as.data.frame() %>% 
+       select(any_of(impact_species))
+     
+     species_values<-bind_rows(species_values,speciesScore)
+    
+    
+      
     }
   }
 )
 
+
+
+df1 <- tibble(x = 1:2, y = letters[1:2])
+df2 <- tibble(x = 4:5, z = 1:2)
+bind_rows(df1, df2,as.data.frame(A))
+
 impact_values<-as.data.frame(impact_values)
-ggplot() + geom_line(aes(y = V2, x = V1,colour="red"),
-                     data = impact_values, stat="identity")
+ggplot() + geom_line(aes(y = value, x = year,colour="red"),
+                     data = impact_value, stat="identity")
+
+
+test %>% as.data.frame() %>% View()
+A<-data.frame()
+A
+names(A)<-names(test)
