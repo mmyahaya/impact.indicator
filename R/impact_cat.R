@@ -1,14 +1,14 @@
-impact_cat<-function(data,
+impact_cat<-function(impact_data,
                      species_list,
                      col_impact=NULL,
                      col_name=NULL,
                      fun="max"){
 
 
-  if(all(c("impact_category","scientific_name")%in%names(data))){
-    data<-data
+  if(all(c("impact_category","scientific_name")%in%names(impact_data))){
+    impact_data<-impact_data
   } else if((!is.null(col_impact)&!is.null(col_name))){
-    data <- data %>%
+    impact_data <- impact_data %>%
       rename(all_of(c(impact_category=col_impact, scientific_name=col_name)))
 
   } else{ stop("required column is not given")}
@@ -22,7 +22,7 @@ impact_cat<-function(data,
     f<-function(x) mean(x,na.rm = T)
   } else {stop("`fun` should be max, min or mean character")}
 
-  category_M = data %>%
+  category_M = impact_data %>%
     dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
     dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>%
     dplyr::select(scientific_name,
