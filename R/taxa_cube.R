@@ -77,9 +77,11 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
 
 
   taxa_cube<-b3gbi::process_cube(taxa.sf,grid_type = "custom",
-                                 cols_cellCode = "cellid", cols_year = "year",
+                                 cols_cellCode = "cellid", 
+                                 cols_year = "year",
                                  cols_occurrences = "occurrences",
-                                 cols_species = "species",cols_speciesKey = "speciesKey",
+                                 cols_species = "species",
+                                 cols_speciesKey = "speciesKey",
                                  cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters")
 
 
@@ -91,5 +93,5 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
 # countries_sf<-readRDS(paste0(getwd(),"/Data/countries_shapefile.rds"))
 # SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
 # taxa_cube<-taxaFun(taxa = occ_Fabacae, country.sf = SA.sf)
-# species_list<-sort(unique(taxa_cube$data$scientificName))
+# full_species_list<-sort(unique(taxa_cube$data$scientificName))
 SA.sf<-sf::st_read("C:/Users/26485613/OneDrive - Stellenbosch University/Downloads/Code_Data/Code_Data/boundary_south_africa_land_geo.shp")

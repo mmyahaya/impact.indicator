@@ -2,7 +2,13 @@
 #devtools::install_github("b-cubed-eu/b3gbi")
 
 
-sbs.fun<-function(y){
+
+
+full_species_list<-sort(unique(taxa_cube$data$scientificName))
+period=unique(taxa_cube$data$year)
+
+impact_values<-c()
+for(y in period){
   sbs.taxon<-taxa_cube$data %>%
     dplyr::filter(year==y) %>%
     dplyr::select(scientificName,cellCode,obs) %>%
@@ -11,26 +17,17 @@ sbs.fun<-function(y){
     tidyr::pivot_wider(names_from = scientificName, values_from = obs) %>%
     dplyr::arrange(cellCode) %>%
     tibble::column_to_rownames(var = "cellCode")
-  return(sbs.taxon)
-}
-
-full_species_list<-sort(unique(taxa_cube$data$scientificName))
-period=unique(taxa_cube$data$year)
-
-sbs.taxon_list<-map(period,sbs.fun)
-
-impact_values<-c()
-for(y in period){
-  #sbs.taxon_list[[paste0("year","_",y)]]<-sbs.taxon
-  sbs.taxon<-sbs.fun(y)
 
   species_list<-unique(names(sbs.taxon))
 
   if(!exists("taxa_status_list")){
     full_species_list<-sort(unique(taxa_cube$data$scientificName))
     taxa_status_list<-taxa_status(species_list = full_species_list,
-                                    source = "WCVP",
-                                    region = "South Africa")
+                                  source = "WCVP",
+                                  status_data=NULL,
+                                  region="South Africa",
+                                  col_scientificName=NULL,
+                                  col_introductionStatus=NULL)
   }
 
   intro.sf<-taxa_cube$data %>%
@@ -42,8 +39,10 @@ for(y in period){
   status.sf <- intro.sf %>%
     dplyr::group_by(cellCode) %>%
     dplyr::summarise(
-      total_intro_obs = sum(obs[introduction_status == "introduced"], na.rm = TRUE),
-      total_native_obs = sum(obs[introduction_status == "native"], na.rm = TRUE),
+      total_intro_obs = sum(obs[introduction_status == "introduced"], 
+                            na.rm = TRUE),
+      total_native_obs = sum(obs[introduction_status == "native"], 
+                             na.rm = TRUE),
       .groups = "drop"
     ) %>%
     dplyr::mutate(dplyr::across(c(total_intro_obs, total_native_obs),
@@ -51,8 +50,11 @@ for(y in period){
     dplyr::mutate(intro_native=total_intro_obs/total_native_obs) %>%
     dplyr::arrange(cellCode)
   if (!exists("eicat_score_list")){
-    eicat_score_list=impact_cat(data = eicat_data,species_list = species_list,
-                                  fun="max")
+    eicat_score_list=impact_cat(data = eicat_data,
+                                species_list = full_species_list,
+                                col_impact=NULL,
+                                col_name=NULL,
+                                fun="max")
   }
 
   eicat_score<-eicat_score_list[species_list,]
@@ -64,11 +66,3 @@ for(y in period){
   impact<-sum(impactScore,na.rm = TRUE)
   impact_values<-c(impact_values,impact)
 }
-
-
-
-
-
-
-
-
