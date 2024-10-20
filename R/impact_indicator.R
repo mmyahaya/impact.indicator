@@ -18,6 +18,7 @@ impact_indicator<-function(cube,
   period=unique(cube$data$year)
 
   impact_values<-c()
+  species_values<-data.frame()
   for(y in period){
     sbs.taxon<-cube$data %>%
       dplyr::filter(year==y) %>%
@@ -65,6 +66,10 @@ impact_indicator<-function(cube,
                                   col_impact=col_impact,
                                   col_name=col_name,
                                   fun=fun)
+      
+      impact_species <- eicat_score_list %>% 
+        na.omit() %>% 
+        rownames()
     }
 
     eicat_score<-eicat_score_list[species_list,]
@@ -75,11 +80,25 @@ impact_indicator<-function(cube,
     impactScore = siteScore*abdundance_impact
     impact<-sum(impactScore,na.rm = TRUE)
     impact_values<-rbind(impact_values,c(y,impact))
+    
+   
+    
+    speciesScore<-colSums(impactScore,na.rm = TRUE) %>% 
+      as.data.frame() %>% 
+      t() %>% 
+      as.data.frame() %>% 
+      select(any_of(impact_species))
+    
+    species_values<-bind_rows(species_values,speciesScore)
+   
+    
+    
   }
 
   impact_values<-as.data.frame(impact_values)
   names(impact_values)<-c("year","value")
-  return(impact_values)
+  rownames(species_values)<-as.character(period)
+  return(list("impact_values"=impact_values,"species_values"=species_values))
 }
 
 
@@ -180,16 +199,10 @@ system.time(
 
 
 
-df1 <- tibble(x = 1:2, y = letters[1:2])
-df2 <- tibble(x = 4:5, z = 1:2)
-bind_rows(df1, df2,as.data.frame(A))
 
 impact_values<-as.data.frame(impact_values)
 ggplot() + geom_line(aes(y = value, x = year,colour="red"),
                      data = impact_value, stat="identity")
 
 
-test %>% as.data.frame() %>% View()
-A<-data.frame()
-A
-names(A)<-names(test)
+
