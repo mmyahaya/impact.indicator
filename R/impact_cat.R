@@ -15,18 +15,19 @@ impact_cat<-function(impact_data,
 
 
   if(fun=="max"){
-    f<-function(x) max(x,na.rm = T)
+    f<-function(x) max(x,na.rm = TRUE)
   } else if(fun=="min"){
-    f<-function(x) min(x,na.rm = T)
+    f<-function(x) min(x,na.rm = TRUE)
   } else if(fun=="mean"){
-    f<-function(x) mean(x,na.rm = T)
+    f<-function(x) mean(x,na.rm = TRUE)
+  } else if(fun=="cum"){
+    f<-function(x) sum(x,na.rm = TRUE)
   } else {stop("`fun` should be max, min or mean character")}
 
-  category_M = impact_data %>%
+  category_max_min = impact_data %>%
     dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
     dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>%
-    dplyr::select(scientific_name,
-           impact_category) %>%
+    dplyr::select(scientific_name,impact_mechanism,impact_category) %>%
     dplyr::mutate(category_value = case_when(
       impact_category == "MC" ~ 0,
       impact_category == "MN" ~1,
@@ -35,14 +36,62 @@ impact_cat<-function(impact_data,
       impact_category == "MV" ~4,
       TRUE ~ 0  # Default case, if any value falls outside the specified ranges
     )) %>%
-    dplyr::group_by(scientific_name,impact_category) %>%
+    dplyr::group_by(scientific_name,impact_mechanism,impact_category) %>%
 
-    dplyr::summarise("impact"=across(category_value, first),
-                     "frequency"= across(category_value, length),
+    dplyr::summarise(#"impact"=
+                       across(category_value, first),
+                     #"frequency"= across(category_value, length),
                      .groups = "drop") %>%
+    
+    dplyr::group_by(scientific_name) %>%
+    dplyr::summarise("max"=across(category_value, max),
+      "mean"= across(category_value, mean),
+      .groups = "drop") %>% 
+    dplyr::filter(scientific_name %in% species_list) 
+  # %>%
+  #   
+  #   tibble::column_to_rownames(var = "scientific_name")
+  
+  
+  
+  
+  category_sum_mech = impact_data %>%
+    dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
+    dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>%
+    dplyr::select(scientific_name,impact_mechanism,impact_category) %>%
+    dplyr::mutate(category_value = case_when(
+      impact_category == "MC" ~ 0,
+      impact_category == "MN" ~1,
+      impact_category == "MO" ~2,
+      impact_category == "MR" ~3,
+      impact_category == "MV" ~4,
+      TRUE ~ 0  # Default case, if any value falls outside the specified ranges
+    )) %>%
+    dplyr::group_by(scientific_name,impact_mechanism,impact_category) %>%
+    
+    dplyr::summarise(#"impact"=
+      across(category_value, first),
+      #"frequency"= across(category_value, length),
+      .groups = "drop") %>%
+    
+    dplyr::group_by(scientific_name,impact_mechanism) %>%
+    dplyr::summarise(across(category_value,max),
+                     .groups = "drop") %>% 
+    dplyr::group_by(scientific_name) %>%
+    dplyr::summarise(across(category_value,sum),
+                     .groups = "drop") %>% 
+    dplyr::filter(scientific_name %in% species_list) 
+  # %>%
+  #   
+  #   tibble::column_to_rownames(var = "scientific_name")
+  
+  category_M<-left_join(category_max_min,category_sum_mech, 
+                        by=join_by(scientific_name))
+  
+  
 
-    tidyr::pivot_wider(names_from = impact_category,
-                       values_from = c(impact,frequency)) %>%
+    # tidyr::pivot_wider(names_from = impact_category,
+    #                    values_from = c(impact,frequency)) %>%
 
     dplyr::filter(scientific_name %in% species_list) %>%
 
