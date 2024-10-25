@@ -19,7 +19,7 @@ impact_indicator<-function(cube,
 
   impact_values<-c()
   species_values<-data.frame()
-  for(y in period){
+  for(y in 2010:2024){
     sbs.taxon<-cube$data %>%
       dplyr::filter(year==y) %>%
       dplyr::select(scientificName,cellCode,obs) %>%
@@ -74,11 +74,24 @@ impact_indicator<-function(cube,
 
     eicat_score<-eicat_score_list[species_list,]
 
-    siteScore<-status.sf$intro_native
+   # siteScore<-status.sf$intro_native
+    
+    sbs.taxon[sbs.taxon>0]<-1
 
-    abdundance_impact = sweep(sbs.taxon,2,eicat_score,FUN = "*")
-    impactScore = siteScore*abdundance_impact
-    impact<-sum(impactScore,na.rm = TRUE)
+    abdundance_impact = sweep(sbs.taxon,2,eicat_score$max_mech,FUN = "*")
+    #impactScore = siteScore*abdundance_impact
+    impactScore<-abdundance_impact
+    
+    
+    # Remove rows with all NAs
+    impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != ncol(impactScore), ]
+    
+    # Remove columns with all NAs
+    impactScore_clean <- impactScore_clean[, colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
+    
+    
+    
+    impact<-sum(impactScore_clean,na.rm = TRUE)/367
     impact_values<-rbind(impact_values,c(y,impact))
     
    
@@ -97,13 +110,13 @@ impact_indicator<-function(cube,
 
   impact_values<-as.data.frame(impact_values)
   names(impact_values)<-c("year","value")
-  rownames(species_values)<-as.character(period)
+  rownames(species_values)<-as.character(2010:2024)
   return(list("impact_values"=impact_values,"species_values"=species_values))
 }
 
 
 
-impact_value<-impact_indicator(cube=taxa_cube,
+impact_value<-impact_indicator(cube=acacia_cube,
                            status_source="WCVP",
                            status_data=NULL,
                            region="South Africa",
@@ -112,8 +125,16 @@ impact_value<-impact_indicator(cube=taxa_cube,
                            impact_data = eicat_data,
                            col_impact=NULL,
                            col_name=NULL,
-                           fun="max")
+                           fun="max_mech")
 
+ggplot() + geom_line(aes(y = value, x = year),colour="red",
+                     data = impact_value$impact_values, stat="identity")+
+  labs(
+    title = "Impact risk",
+    y = "sum of risk map value"
+  )+theme(text=element_text(size=20))
+
+##### rough ####
 system.time(
   {
     full_species_list<-sort(unique(cube$data$scientificName))
@@ -174,7 +195,7 @@ system.time(
 
       siteScore<-status.sf$intro_native
 
-      abdundance_impact = sweep(sbs.taxon,2,eicat_score,FUN = "*")
+      abdundance_impact = sweep(sbs.taxon,2,eicat_score$max_mech,FUN = "*")
       impactScore = siteScore*abdundance_impact
       impact<-sum(impactScore,na.rm = TRUE)
       impact_values<-rbind(impact_values,c(y,impact))
@@ -202,7 +223,7 @@ system.time(
 
 impact_values<-as.data.frame(impact_values)
 ggplot() + geom_line(aes(y = value, x = year,colour="red"),
-                     data = impact_value, stat="identity")
+                     data = impact_value$impact_values, stat="identity")
 
 
 

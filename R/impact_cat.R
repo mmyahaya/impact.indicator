@@ -1,3 +1,4 @@
+library(tidyverse)
 impact_cat<-function(impact_data,
                      species_list,
                      col_impact=NULL,
@@ -13,16 +14,17 @@ impact_cat<-function(impact_data,
 
   } else{ stop("required column is not given")}
 
-
-  if(fun=="max"){
-    f<-function(x) max(x,na.rm = TRUE)
-  } else if(fun=="min"){
-    f<-function(x) min(x,na.rm = TRUE)
-  } else if(fun=="mean"){
-    f<-function(x) mean(x,na.rm = TRUE)
-  } else if(fun=="cum"){
-    f<-function(x) sum(x,na.rm = TRUE)
-  } else {stop("`fun` should be max, min or mean character")}
+# chech fun
+  
+#   if(fun=="max"){
+#     f<-function(x) max(x,na.rm = TRUE)
+#   } else if(fun=="min"){
+#     f<-function(x) min(x,na.rm = TRUE)
+#   } else if(fun=="mean"){
+#     f<-function(x) mean(x,na.rm = TRUE)
+#   } else if(fun=="cum"){
+#     f<-function(x) sum(x,na.rm = TRUE)
+#   } else {stop("`fun` should be max, min or mean character")}
 
   category_max_min = impact_data %>%
     dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
@@ -36,26 +38,30 @@ impact_cat<-function(impact_data,
       impact_category == "MV" ~4,
       TRUE ~ 0  # Default case, if any value falls outside the specified ranges
     )) %>%
-    dplyr::group_by(scientific_name,impact_mechanism,impact_category) %>%
-
-    dplyr::summarise(#"impact"=
-                       across(category_value, first),
-                     #"frequency"= across(category_value, length),
-                     .groups = "drop") %>%
+    distinct(scientific_name,impact_mechanism,impact_category, .keep_all = TRUE) %>% 
+    group_by(scientific_name,impact_mechanism) %>% 
+    summarise(across(category_value,max),.groups = "drop") %>% 
+    # reshape to wide format to have specie by trait dataframe
+    pivot_wider(names_from = impact_mechanism, values_from = category_value) %>% 
+    # select species that are only present in gbif data
+    filter(scientific_name %in% species_list)
+  
+  
+  
+  
+  #%>%
     
     dplyr::group_by(scientific_name) %>%
     dplyr::summarise("max"=across(category_value, max),
       "mean"= across(category_value, mean),
       .groups = "drop") %>% 
     dplyr::filter(scientific_name %in% species_list) 
-  # %>%
-  #   
-  #   tibble::column_to_rownames(var = "scientific_name")
+ 
   
   
   
   
-  category_sum_mech = impact_data %>%
+  category_sum_mech= impact_data %>%
     dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
     dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>%
     dplyr::select(scientific_name,impact_mechanism,impact_category) %>%
@@ -85,23 +91,19 @@ impact_cat<-function(impact_data,
   #   
   #   tibble::column_to_rownames(var = "scientific_name")
   
-  category_M<-left_join(category_max_min,category_sum_mech, 
-                        by=join_by(scientific_name))
-  
-  
-
-    # tidyr::pivot_wider(names_from = impact_category,
-    #                    values_from = c(impact,frequency)) %>%
-
-    dplyr::filter(scientific_name %in% species_list) %>%
-
+  category_M<-dplyr::left_join(category_max_min,category_sum_mech, 
+                        by=join_by(scientific_name)) %>% 
     tibble::column_to_rownames(var = "scientific_name")
+  
+  names(category_M)<-c("max","mean","max_mech")
+
+   
+    
 
 
-  df_impact <- category_M %>%
-    select(starts_with("impact"))
 
-  impact_matrix<-as.data.frame(apply(df_impact,1,f))
+
+  impact_matrix<-category_M %>% dplyr::select(all_of(fun))
 
   na.df<-as.data.frame(matrix(NA,
                               nrow = length(setdiff(species_list,
@@ -125,4 +127,12 @@ impact_cat<-function(impact_data,
 }
 
 
-#category<-impact_cat(Combined_eicat_data,full_species_list)
+category<-impact_cat(eicat_data,species_list,fun="max_mech")
+
+species_list<-sort(unique(acacia_cube$data$scientificName))
+
+acacia_cube$data<-left_join(acacia_cube$data,category, by=join_by("scientificName"=="rowname"))
+
+length(unique(acacia_cube$data$cellCode))
+
+occ_density_ts(acacia_cube)

@@ -89,9 +89,16 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
 }
 
 
-
+acacia_cube$data
 # countries_sf<-readRDS(paste0(getwd(),"/Data/countries_shapefile.rds"))
 # SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
-# taxa_cube<-taxaFun(taxa = occ_Fabacae, country.sf = SA.sf)
+# taxa_cube<-taxaFun(taxa = occ_Fabacae, country.sf = SA.sf, res=1)
 # full_species_list<-sort(unique(taxa_cube$data$scientificName))
 SA.sf<-sf::st_read("C:/Users/26485613/OneDrive - Stellenbosch University/Downloads/Code_Data/Code_Data/boundary_south_africa_land_geo.shp")
+
+
+acacia_cube<-taxaFun(taxa = taxa_Acacia, country.sf = SA.sf, res=0.25)
+
+
+calc_ts.obs_richness(acacia_cube)
+occ_density_ts(taxa_cube)
