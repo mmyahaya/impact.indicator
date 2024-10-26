@@ -66,46 +66,46 @@ impact_indicator<-function(cube,
                                   col_impact=col_impact,
                                   col_name=col_name,
                                   fun=fun)
-      
-      impact_species <- eicat_score_list %>% 
-        na.omit() %>% 
+
+      impact_species <- eicat_score_list %>%
+        na.omit() %>%
         rownames()
     }
 
     eicat_score<-eicat_score_list[species_list,]
 
    # siteScore<-status.sf$intro_native
-    
+
     sbs.taxon[sbs.taxon>0]<-1
 
-    abdundance_impact = sweep(sbs.taxon,2,eicat_score$max_mech,FUN = "*")
+    abdundance_impact = sweep(sbs.taxon,2,eicat_score,FUN = "*")
     #impactScore = siteScore*abdundance_impact
     impactScore<-abdundance_impact
-    
-    
+
+
     # Remove rows with all NAs
     impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != ncol(impactScore), ]
-    
+
     # Remove columns with all NAs
     impactScore_clean <- impactScore_clean[, colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
-    
-    
-    
+
+
+
     impact<-sum(impactScore_clean,na.rm = TRUE)/367
     impact_values<-rbind(impact_values,c(y,impact))
-    
-   
-    
-    speciesScore<-colSums(impactScore,na.rm = TRUE) %>% 
-      as.data.frame() %>% 
-      t() %>% 
-      as.data.frame() %>% 
+
+
+
+    speciesScore<-colSums(impactScore,na.rm = TRUE) %>%
+      as.data.frame() %>%
+      t() %>%
+      as.data.frame() %>%
       select(any_of(impact_species))
-    
+
     species_values<-bind_rows(species_values,speciesScore)
-   
-    
-    
+
+
+
   }
 
   impact_values<-as.data.frame(impact_values)
@@ -199,21 +199,21 @@ system.time(
       impactScore = siteScore*abdundance_impact
       impact<-sum(impactScore,na.rm = TRUE)
       impact_values<-rbind(impact_values,c(y,impact))
-      
-     impact_species <- eicat_score_list %>% 
-        na.omit() %>% 
+
+     impact_species <- eicat_score_list %>%
+        na.omit() %>%
         rownames()
-     
-     speciesScore<-colSums(impactScore,na.rm = TRUE) %>% 
-       as.data.frame() %>% 
-       t() %>% 
-       as.data.frame() %>% 
+
+     speciesScore<-colSums(impactScore,na.rm = TRUE) %>%
+       as.data.frame() %>%
+       t() %>%
+       as.data.frame() %>%
        select(any_of(impact_species))
-     
+
      species_values<-bind_rows(species_values,speciesScore)
-    
-    
-      
+
+
+
     }
   }
 )

@@ -69,15 +69,16 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
     sf::st_join(grid) %>%
     as.data.frame() %>%
     dplyr::select(-geometry) %>%
-    dplyr::mutate(occurrences=1) %>%
-    dplyr::group_by(species,coordinateUncertaintyInMeters,year,speciesKey,
-                    iucnRedListCategory,
-                    cellid) %>%
-    dplyr::summarise(across(occurrences, sum), .groups = "drop")
+    dplyr::mutate(occurrences=1)
+  # %>%
+  #   dplyr::group_by(species,coordinateUncertaintyInMeters,year,speciesKey,
+  #                   iucnRedListCategory,
+  #                   cellid) %>%
+  #   dplyr::summarise(across(occurrences, sum), .groups = "drop")
 
 
   taxa_cube<-b3gbi::process_cube(taxa.sf,grid_type = "custom",
-                                 cols_cellCode = "cellid", 
+                                 cols_cellCode = "cellid",
                                  cols_year = "year",
                                  cols_occurrences = "occurrences",
                                  cols_species = "species",
