@@ -160,6 +160,36 @@ impact_indicator<-function(cube,
     } else {
       eicat_score<-eicat_score_list[species_list,"max_mech"]
       
+      #impact score multiply by species by site
+      impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
+      
+      # Remove rows with all NAs
+      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != 
+                                         ncol(impactScore)
+                                       , ]
+      
+      # Remove columns with all NAs
+      if(length(impactScore_clean)!=0){
+        impactScore_clean <- impactScore_clean[, 
+             colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
+        
+      }
+      
+      # if any species has impact
+      if(!is.null(dim(impactScore_clean))){
+        if(type=="cumulative"){
+          siteScore<-apply(impactScore_clean,1, function(x) sum(x,
+                                                                na.rm = TRUE))
+          
+          impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
+          impact_values<-rbind(impact_values,c(y,impact))
+        }
+      }
+      else { # return NA is no species has impact
+        impact<-NA
+        impact_values<-rbind(impact_values,c(y,impact))
+      }
+      
       
       }
 
@@ -211,7 +241,7 @@ impact_value<-impact_indicator(cube=acacia_cube,
                            impact_data = eicat_data,
                            col_impact=NULL,
                            col_name=NULL,
-                           type = "mean cumulative")
+                           type = "cumulative")
 
 ggplot() + geom_line(aes(y = value, x = year),colour="red",
                      data = impact_value$impact_values, stat="identity")+
