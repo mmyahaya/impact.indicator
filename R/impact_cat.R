@@ -2,8 +2,7 @@ library(tidyverse)
 impact_cat<-function(impact_data,
                      species_list,
                      col_impact=NULL,
-                     col_name=NULL,
-                     fun="max"){
+                     col_name=NULL){
 
 
   if(all(c("impact_category","scientific_name")%in%names(impact_data))){
@@ -83,7 +82,8 @@ impact_cat<-function(impact_data,
   names(category_M)<-c("max","mean","max_mech")
 
 
-  impact_matrix<-category_M %>% dplyr::select(all_of(fun))
+  #impact_matrix<-category_M %>% dplyr::select(all_of(fun))
+  impact_matrix<-category_M
 
   na.df<-as.data.frame(matrix(NA,
                               nrow = length(setdiff(species_list,
@@ -99,11 +99,10 @@ impact_cat<-function(impact_data,
 
   return(impact_matrix)
 
-
 }
 
 
-category<-impact_cat(eicat_data,species_list,fun="max_mech")
+category<-impact_cat(eicat_data,full_species_list)
 
 species_list<-sort(unique(acacia_cube$data$scientificName))
 
