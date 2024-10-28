@@ -3,11 +3,6 @@
 
 
 impact_indicator<-function(cube,
-                          # status_source,
-                          # status_data=NULL,
-                          # region="South Africa",
-                          # col_scientificName=NULL,
-                          # col_introductionStatus=NULL,
                            impact_data = NULL,
                            col_impact=NULL,
                            col_name=NULL,
@@ -29,36 +24,7 @@ impact_indicator<-function(cube,
       tibble::column_to_rownames(var = "cellCode")
 
     species_list<-unique(names(sbs.taxon))
-
-    # if(!exists("taxa_status_list")){
-    #   full_species_list<-sort(unique(cube$data$scientificName))
-    #   taxa_status_list<-taxa_status(species_list = full_species_list,
-    #                                 status_source = "WCVP",
-    #                                 status_data=status_data,
-    #                                 region=region,
-    #                                 col_scientificName=col_scientificName,
-    #                                 col_introductionStatus=col_introductionStatus)
-    # }
-    # 
-    # intro.sf<-cube$data %>%
-    #   dplyr::filter(year==y) %>%
-    #   dplyr::left_join(taxa_status_list,
-    #                    by = c("scientificName" = "taxon"))
-    # 
-    # 
-    # status.sf <- intro.sf %>%
-    #   dplyr::group_by(cellCode) %>%
-    #   dplyr::summarise(
-    #     total_intro_obs = sum(obs[introduction_status == "introduced"],
-    #                           na.rm = TRUE),
-    #     total_native_obs = sum(obs[introduction_status == "native"],
-    #                            na.rm = TRUE),
-    #     .groups = "drop"
-    #   ) %>%
-    #   dplyr::mutate(dplyr::across(c(total_intro_obs, total_native_obs),
-    #                               ~ ifelse(.==0,NA,.))) %>%
-    #   dplyr::mutate(intro_native=total_intro_obs/total_native_obs) %>%
-    #   dplyr::arrange(cellCode)
+    
     if (!exists("eicat_score_list")){
       eicat_score_list=impact_cat(impact_data = impact_data,
                                   species_list = full_species_list,
@@ -191,32 +157,9 @@ impact_indicator<-function(cube,
       }
       
       
-      }
-
-# 
-#     #impact score multiply by species by site
-#     impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
-#    
-# 
-#     # Remove rows with all NAs
-#     impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != 
-#                                        ncol(impactScore)
-#                                      , ]
-# 
-#     # Remove columns with all NAs
-#     if(length(impactScore_clean)!=0){
-#       impactScore_clean <- impactScore_clean[, 
-#             colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
-#     }
-#     
-# 
-# 
-# 
-#     impact<-sum(impactScore_clean,na.rm = TRUE)/cube$num_cells
-#     impact_values<-rbind(impact_values,c(y,impact))
-
-
-
+    }
+    
+    # Species impact
     speciesScore<-colSums(impactScore,na.rm = TRUE) %>%
       as.data.frame() %>%
       t() %>%
@@ -241,7 +184,7 @@ impact_value<-impact_indicator(cube=acacia_cube,
                            impact_data = eicat_data,
                            col_impact=NULL,
                            col_name=NULL,
-                           type = "cumulative")
+                           type = "precautionary")
 
 ggplot() + geom_line(aes(y = value, x = year),colour="red",
                      data = impact_value$impact_values, stat="identity")+

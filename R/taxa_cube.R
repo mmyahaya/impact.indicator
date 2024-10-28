@@ -59,11 +59,12 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
 
   taxa.sf = taxa.df %>%
     dplyr::select(decimalLatitude,decimalLongitude,
-                  species,speciesKey,iucnRedListCategory,coordinateUncertaintyInMeters,dateIdentified,year) %>% #select occurrence data
+                  species,speciesKey,iucnRedListCategory,
+                  coordinateUncertaintyInMeters,year) %>% #select occurrence data
     dplyr::filter_all(all_vars(!is.na(.))) %>% # remove rows with missing data
     dplyr::filter(coordinateUncertaintyInMeters<=res*1000) %>%
     #dplyr::mutate(coordinateUncertaintyInMeters = coordinateUncertaintyInMeters/(res*1000)^2) %>%
-    dplyr::mutate(dateIdentified = as.Date(dateIdentified)) %>%  # convert date to date format
+    #dplyr::mutate(dateIdentified = as.Date(dateIdentified)) %>%  # convert date to date format
     sf::st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
                  crs = 4326) %>%
     sf::st_join(grid) %>%
@@ -83,7 +84,7 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
                                  cols_occurrences = "occurrences",
                                  cols_species = "species",
                                  cols_speciesKey = "speciesKey",
-                                 cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters")
+      cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters")
 
 
   return(taxa_cube)
@@ -103,3 +104,7 @@ acacia_cube<-taxaFun(taxa = taxa_Acacia, country.sf = SA.sf, res=0.25)
 
 calc_ts.obs_richness(acacia_cube)
 occ_density_ts(taxa_cube)
+
+
+
+
