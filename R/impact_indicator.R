@@ -24,7 +24,7 @@ impact_indicator<-function(cube,
       tibble::column_to_rownames(var = "cellCode")
 
     species_list<-unique(names(sbs.taxon))
-    
+
     if (!exists("eicat_score_list")){
       eicat_score_list=impact_cat(impact_data = impact_data,
                                   species_list = full_species_list,
@@ -35,22 +35,22 @@ impact_indicator<-function(cube,
         na.omit() %>%
         rownames()
     }
-    
+
     if(type %in% c("precautionary","precautionary cumulative")){
-      
+
       eicat_score<-eicat_score_list[species_list,"max"]
-      
+
       #impact score multiply by species by site
       impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
-      
+
       # Remove rows with all NAs
-      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != 
+      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) !=
                                          ncol(impactScore)
                                        , ]
-      
+
       # Remove columns with all NAs
       if(length(impactScore_clean)!=0){
-        impactScore_clean <- impactScore_clean[, 
+        impactScore_clean <- impactScore_clean[,
                   colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
 
       }
@@ -59,16 +59,16 @@ impact_indicator<-function(cube,
         if(type=="precautionary"){
           siteScore<-apply(impactScore_clean,1, function(x) max(x,
                                                                 na.rm = TRUE))
-          
+
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
         } else {
-          
+
           #Precautionary cumulative
           siteScore<-apply(impactScore_clean,1, function(x) sum(x,
                                                                 na.rm = TRUE))
-          
-          
+
+
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
         }
@@ -77,40 +77,40 @@ impact_indicator<-function(cube,
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
       }
-      
-      
+
+
     } else if (type %in% c("mean cumulative","mean")){
       eicat_score<-eicat_score_list[species_list,"mean"]
-      
+
       #impact score multiply by species by site
       impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
-      
+
       # Remove rows with all NAs
-      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != 
+      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) !=
                                          ncol(impactScore)
                                        , ]
-      
+
       # Remove columns with all NAs
       if(length(impactScore_clean)!=0){
-        impactScore_clean <- impactScore_clean[, 
+        impactScore_clean <- impactScore_clean[,
                   colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
-        
+
       }
       # if any species has impact
       if(!is.null(dim(impactScore_clean))){
         if(type=="mean cumulative"){
           siteScore<-apply(impactScore_clean,1, function(x) sum(x,
                                                                 na.rm = TRUE))
-          
+
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
         } else {
-          
+
           #mean
           siteScore<-apply(impactScore_clean,1, function(x) mean(x,
                                                                 na.rm = TRUE))
-          
-          
+
+
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
         }
@@ -119,34 +119,34 @@ impact_indicator<-function(cube,
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
       }
-      
-      
-      
-      
+
+
+
+
     } else {
       eicat_score<-eicat_score_list[species_list,"max_mech"]
-      
+
       #impact score multiply by species by site
       impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
-      
+
       # Remove rows with all NAs
-      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) != 
+      impactScore_clean <- impactScore[rowSums(is.na(impactScore)) !=
                                          ncol(impactScore)
                                        , ]
-      
+
       # Remove columns with all NAs
       if(length(impactScore_clean)!=0){
-        impactScore_clean <- impactScore_clean[, 
+        impactScore_clean <- impactScore_clean[,
              colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
-        
+
       }
-      
+
       # if any species has impact
       if(!is.null(dim(impactScore_clean))){
         if(type=="cumulative"){
           siteScore<-apply(impactScore_clean,1, function(x) sum(x,
                                                                 na.rm = TRUE))
-          
+
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
         }
@@ -155,10 +155,10 @@ impact_indicator<-function(cube,
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
       }
-      
-      
+
+
     }
-    
+
     # Species impact
     speciesScore<-colSums(impactScore,na.rm = TRUE) %>%
       as.data.frame() %>%
@@ -193,13 +193,13 @@ ggplot() + geom_line(aes(y = value, x = year),colour="red",
     y = "sum of risk map value"
   )+theme(text=element_text(size=20))
 
-df<-impact_value$species_values %>% 
-  rownames_to_column("year") %>% 
-  mutate(year=as.numeric(year)) %>% 
+df<-impact_value$species_values %>%
+  rownames_to_column("year") %>%
+  mutate(year=as.numeric(year)) %>%
   gather(-year,key = "Alien_species", value = "impact_score")
 
 
-ggplot(df, aes(x = year, y = impact_score)) + 
-  geom_line(aes(color = Alien_species)) 
+ggplot(df, aes(x = year, y = impact_score)) +
+  geom_line(aes(color = Alien_species))
 length(unique(taxa_Acacia$species))
 

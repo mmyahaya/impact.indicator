@@ -22,7 +22,10 @@
 #' @return A dataframe containing the `sim_cubes` of taxa.
 #'
 
-taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
+taxaFun <- function(taxa,country.sf,limit=500,
+                    country='ZA',
+                    res=0.25,
+                    first_year=NULL){
 
   grid <- country.sf %>%
     sf::st_make_grid(cellsize = c(res,res),
@@ -84,7 +87,8 @@ taxaFun <- function(taxa,country.sf,limit=500,country='ZA',res=0.25){
                                  cols_occurrences = "occurrences",
                                  cols_species = "species",
                                  cols_speciesKey = "speciesKey",
-      cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters")
+      cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters",
+      first_year = first_year)
 
 
   return(taxa_cube)
@@ -99,7 +103,7 @@ acacia_cube$data
 SA.sf<-sf::st_read("C:/Users/26485613/OneDrive - Stellenbosch University/Downloads/Code_Data/Code_Data/boundary_south_africa_land_geo.shp")
 
 
-acacia_cube<-taxaFun(taxa = taxa_Acacia, country.sf = SA.sf, res=0.25)
+acacia_cube<-taxaFun(taxa = taxa_Acacia, country.sf = SA.sf, res=0.25,first_year=2010)
 
 
 calc_ts.obs_richness(acacia_cube)
