@@ -6,7 +6,8 @@ impact_indicator<-function(cube,
                            impact_data = NULL,
                            col_impact=NULL,
                            col_name=NULL,
-                           type=NULL){
+                           type=NULL,
+                           coords=NULL){
 
 
   full_species_list<-sort(unique(cube$data$scientificName))
@@ -89,7 +90,7 @@ impact_indicator<-function(cube,
         }
       }
       else { # return NA if no species has impact
-        siteScore<-data.frame("siteID"=NA,"1990"=NA)
+        siteScore<-data.frame("siteID"=NA,"year"=NA)
         names(siteScore)[2]<-as.character(y)
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
@@ -145,7 +146,7 @@ impact_indicator<-function(cube,
         }
       }
       else { # return NA is no species has impact
-        siteScore<-data.frame("siteID"=NA,"1990"=NA)
+        siteScore<-data.frame("siteID"=NA,"year"=NA)
         names(siteScore)[2]<-as.character(y)
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
@@ -189,7 +190,7 @@ impact_indicator<-function(cube,
         }
       }
       else { # return NA is no species has impact
-        siteScore<-data.frame("siteID"=NA,"1990"=NA)
+        siteScore<-data.frame("siteID"=NA,"year"=NA)
         names(siteScore)[2]<-as.character(y)
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
@@ -221,11 +222,12 @@ impact_indicator<-function(cube,
 
 
 
-impact_value<-impact_indicator(cube=acacia_cube,
+impact_value<-impact_indicator(cube=acacia_cube$cube,
                            impact_data = eicat_data,
                            col_impact=NULL,
                            col_name=NULL,
-                           type = "mean cumulative")
+                           type = "mean",
+                           coords=acacia_cube$coords)
 
 ggplot() + geom_line(aes(y = value, x = year),colour="red",
                      data = impact_value$impact_values, stat="identity")+
@@ -248,7 +250,7 @@ sitedf<-impact_value$sitedf
 sitedf %>% 
   gather(-c(siteID,X,Y),key="year",value="impact") %>% 
   na.omit() %>% 
-  filter(year>=2021) %>% 
+  #filter(year>=2021) %>% 
   ggplot() +
   geom_tile(
             aes(x=X,y=Y,fill=impact),color="black")+

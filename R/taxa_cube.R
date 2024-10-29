@@ -33,6 +33,12 @@ taxaFun <- function(taxa,country.sf,limit=500,
                                 sf::st_bbox(country.sf)$ymin)) %>%
     sf::st_sf() %>%
     dplyr::mutate(cellid = dplyr::row_number())
+  
+  # get coordinates of the occurrence sites
+  coords <- sf::st_coordinates(sf::st_centroid(grid)) %>% 
+    as.data.frame() %>% 
+    tibble::rownames_to_column(var = "siteID") %>% 
+    suppressWarnings()
 
   # download taxaif the scientific name is given as character
   if("character" %in% class(taxa)){
@@ -91,7 +97,7 @@ taxaFun <- function(taxa,country.sf,limit=500,
       first_year = first_year)
 
 
-  return(taxa_cube)
+  return(list("cube"=taxa_cube,"coords"=coords))
 }
 
 
@@ -103,7 +109,8 @@ acacia_cube$data
 SA.sf<-sf::st_read("C:/Users/26485613/OneDrive - Stellenbosch University/Downloads/Code_Data/Code_Data/boundary_south_africa_land_geo.shp")
 
 
-acacia_cube<-taxaFun(taxa = taxa_Acacia, country.sf = SA.sf, res=0.25,first_year=2010)
+acacia_cube<-taxaFun(taxa = taxa_Acacia, country.sf = SA.sf,
+                     res=0.25,first_year = 2010)
 
 
 calc_ts.obs_richness(acacia_cube)
