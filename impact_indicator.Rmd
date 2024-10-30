@@ -1,0 +1,179 @@
+---
+title: "Impact indicator of Alien Taxa"
+author: "Mukhtar Yahaya"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Description
+
+This R Markdown demonstrate the computation of impact indicator of alien species using the `impact_indicator()`. The `impact_indicator()` feeds in species occurrence cube from the `b3gbi::process_cube()` using `taxaFun()` and processed 
+Environmental Impact Classification of Alien Taxa (EICAT) impact score of species
+using `impact_cat()`. The code in on GitHub repository <https://github.com/mmyahaya/impact.indicator>.
+
+```{r load packages }
+# Load packages
+library(b3gbi)       # Biodiversity indicators for data cubes
+library(tidyverse)   # Data wrangling and visualisation
+library(knitr)        # Nice tables 
+library(sf)          # Spatial features
+
+
+# Source functions
+source("C:/Users/mukht/Documents/impact.indicator/R/impact_indicator.R")
+source("C:/Users/mukht/Documents/impact.indicator/R/taxa_cube.R")
+source("C:/Users/mukht/Documents/impact.indicator/R/impact_cat.R")
+
+```
+
+```{r}
+# load the shapefile for study region
+countries_sf<-readRDS(paste0(getwd(),"/Data/countries_shapefile.rds"))
+SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
+plot(SA.sf, main = "South African map")
+```
+
+# Process occurrence cube
+```{r}
+# load the GBIF occurrence data for taxa
+taxa_Acacia<-readRDS(paste0(getwd(),"/Data/taxa_Acacia.rds"))
+acacia_cube<-taxaFun(taxa=taxa_Acacia,
+                    country.sf=SA.sf,
+                    res=0.25,
+                    first_year=2010)
+
+acacia_cube$cube
+head(acacia_cube$coords)
+```
+# Aggregate impact scores for each species
+
+There are various impact scores for each species due to mechanisms and region of 
+impact. There is need to aggregate these impact scores for each species. The 
+`impact_cat()` aggregate impact using ***max***, ***mean*** and - ***max_mech*** as metrics used by different studies. 
+
+- ***max***: maximum impact score across all categories recorded for the species\
+- ***mean***: mean impact score across all categories\
+- ***max_mech***: sum of the maximum impact per mechanisms
+
+```{r }
+eicat_data<-readRDS(paste0(getwd(),"/Data/eicat_data.rds"))
+full_species_list<-sort(unique(acacia_cube$cube$data$scientificName))
+eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
+                      impact_category) %>% 
+  head(10)
+agg_impact<-impact_cat(impact_data=eicat_data,
+                     species_list=full_species_list,
+                     col_impact=NULL,
+                     col_name=NULL)
+agg_impact
+```
+# Compute impact indicator by summing impact risk map
+
+
+The impact risk map depict the impact score in each site. There are various species
+in each site. There is need for aggregated scores across species in each site. The 
+`impact_indicator` uses ***max***, ***sum*** and ***mean*** metrics to aggregate
+impact scores as proposed by Boulesnane-Guengant et al., 2024 (unpublished). The combinations of aggregation metrics for each species and sites leads five type of
+indicators, namely, ***precautionary***, ***precautionary cumulative***, ***mean***, ***mean cumulative*** and ***cumulative***.\
+
+
+- ***precautionary***: maximum score across species' max in each site\
+- ***precautionary cumulative***: cumulative score across species' max in each site\
+- ***mean***: mean score across species' mean in each site\
+***mean cumulative***: cumulative score across species' mean in each site\
+- ***cumulative***: cumulative score across species' sum of maximum score per mechanism\
+```{r}
+impact_value<-impact_indicator(cube=acacia_cube$cube,
+                               impact_data = eicat_data,
+                               col_impact=NULL,
+                               col_name=NULL,
+                               type = "mean cumulative",
+                               coords=acacia_cube$coords)
+```
+### impact risk map
+```{r}
+#impact risk map
+#visualise last four years for readability
+impact_value$sitedf%>% 
+  gather(-c(siteID,X,Y),key="year",value="impact") %>% 
+  na.omit() %>% 
+  filter(year>=2021) %>% 
+  ggplot() +
+  geom_tile(
+    aes(x=X,y=Y,fill=impact),color="black")+
+  geom_sf(data = SA.sf, fill = NA, color = "black", alpha = 0.5)+
+  scale_fill_gradient2(low = "forestgreen",
+                       mid = "yellow",
+                       high = "red")+
+  theme_minimal() +
+  facet_wrap(~year)
+```
+
+```{r}
+#sum of impact risk map for each year
+
+ggplot(data = impact_value$impact_values) +
+  geom_line(aes(y = value, x = year),colour="red",
+            stat="identity",
+            linewidth=2)+
+  geom_smooth(aes(y = value, x = year),linetype=2)+
+  labs(
+    title = "sum of impact risk map",
+    y = "impact score"
+  )+
+  theme_minimal() +
+  theme(text=element_text(size=14))
+```
+
+```{r}
+# sum of species impact per year
+impact_value$species_values %>%
+  rownames_to_column("year") %>%
+  mutate(year=as.numeric(year)) %>%
+  gather(-year,key = "Alien_species", value = "impact_score") %>%
+  ggplot(aes(x = year, y = impact_score)) +
+  geom_line(aes(color = Alien_species),linewidth=1.5)+
+  theme_minimal() +
+  labs(
+    title = "sum of species impact",
+    y = "impact score"
+  )+
+  theme(text=element_text(size=14))
+
+```
+
+```{r}
+# plot all type of impact indicators
+types<-c("precautionary",
+         "precautionary cumulative",
+         "mean",
+         "mean cumulative",
+         "cumulative")
+
+all_impact<-data.frame("year"=unique(acacia_cube$cube$data$year))
+for(type in types){
+  impact_value<-impact_indicator(cube=acacia_cube$cube,
+                                 impact_data = eicat_data,
+                                 col_impact=NULL,
+                                 col_name=NULL,
+                                 type = type,
+                                 coords=acacia_cube$coords)
+  
+  all_impact[type]<-impact_value$impact_values$value
+}
+
+all_impact %>%
+  gather(-year,key = "indicator_type", value = "impact_score") %>% 
+  ggplot(aes(x = year, y = impact_score)) +
+  geom_line(aes(color = indicator_type),linewidth=1.5)+
+  theme_minimal() +
+   labs(
+    title = "All type of indicators",
+    y = "impact score"
+  )+
+  theme(text=element_text(size=14))
+```
