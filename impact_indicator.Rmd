@@ -1,5 +1,5 @@
 ---
-title: "Impact indicator of Alien Taxa"
+title: "Code to calculate the impact indicator"
 author: "Mukhtar Yahaya"
 date: "`r Sys.Date()`"
 output: html_document
@@ -11,9 +11,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Description
 
-This R Markdown demonstrate the computation of impact indicator of alien species using the `impact_indicator()`. The `impact_indicator()` feeds in species occurrence cube from the `b3gbi::process_cube()` using `taxaFun()` and processed 
+This R Markdown demonstrates the computation of an impact indicator for biological invasions using the `impact_indicator()`. The `impact_indicator()` feeds in species occurrence cube from the `b3gbi::process_cube()` using `taxaFun()` and processed 
 Environmental Impact Classification of Alien Taxa (EICAT) impact score of species
-using `impact_cat()`. The code in on GitHub repository <https://github.com/mmyahaya/impact.indicator>.
+using `impact_cat()`. The code is available on the GitHub repository <https://github.com/mmyahaya/impact.indicator>.
 
 ```{r load packages }
 # Load packages
