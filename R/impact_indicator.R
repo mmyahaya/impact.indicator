@@ -152,9 +152,6 @@ impact_indicator<-function(cube,
         impact_values<-rbind(impact_values,c(y,impact))
       }
 
-
-
-
     } else {
       eicat_score<-eicat_score_list[species_list,"max_mech"]
 
@@ -220,44 +217,3 @@ impact_indicator<-function(cube,
               "sitedf"=coords))
 }
 
-
-
-impact_value<-impact_indicator(cube=acacia_cube$cube,
-                           impact_data = eicat_data,
-                           col_impact=NULL,
-                           col_name=NULL,
-                           type = "mean",
-                           coords=acacia_cube$coords)
-
-ggplot() + geom_line(aes(y = value, x = year),colour="red",
-                     data = impact_value$impact_values, stat="identity")+
-  labs(
-    title = "Impact risk",
-    y = "sum of risk map value"
-  )+theme(text=element_text(size=20))
-
-df<-impact_value$species_values %>%
-  rownames_to_column("year") %>%
-  mutate(year=as.numeric(year)) %>%
-  gather(-year,key = "Alien_species", value = "impact_score")
-
-
-ggplot(df, aes(x = year, y = impact_score)) +
-  geom_line(aes(color = Alien_species))
-length(unique(taxa_Acacia$species))
-
-sitedf<-impact_value$sitedf
-sitedf %>% 
-  gather(-c(siteID,X,Y),key="year",value="impact") %>% 
-  na.omit() %>% 
-  #filter(year>=2021) %>% 
-  ggplot() +
-  geom_tile(
-            aes(x=X,y=Y,fill=impact),color="black")+
-  geom_sf(data = SA.sf, fill = NA, color = "black", alpha = 0.5)+
-  scale_fill_gradient2(low = "forestgreen",
-                       mid = "yellow",
-                       high = "red")+
-  theme_minimal() +
-  facet_wrap(~year)
-  

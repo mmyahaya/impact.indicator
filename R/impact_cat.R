@@ -1,4 +1,3 @@
-library(tidyverse)
 impact_cat<-function(impact_data,
                      species_list,
                      col_impact=NULL,
@@ -12,18 +11,6 @@ impact_cat<-function(impact_data,
       rename(all_of(c(impact_category=col_impact, scientific_name=col_name)))
 
   } else{ stop("required column is not given")}
-
-# chech fun
-
-#   if(fun=="max"){
-#     f<-function(x) max(x,na.rm = TRUE)
-#   } else if(fun=="min"){
-#     f<-function(x) min(x,na.rm = TRUE)
-#   } else if(fun=="mean"){
-#     f<-function(x) mean(x,na.rm = TRUE)
-#   } else if(fun=="cum"){
-#     f<-function(x) sum(x,na.rm = TRUE)
-#   } else {stop("`fun` should be max, min or mean character")}
 
   category_max_mean <- eicat_data %>%
     mutate(impact_category = substr(impact_category, 1, 2)) %>%
@@ -79,7 +66,7 @@ impact_cat<-function(impact_data,
                         by=join_by(scientific_name)) %>%
     tibble::column_to_rownames(var = "scientific_name")
 
-  names(category_M)<-c("max","mean","max_mech")
+    names(category_M)<-c("max","mean","max_mech")
 
 
   #impact_matrix<-category_M %>% dplyr::select(all_of(fun))
@@ -98,16 +85,4 @@ impact_cat<-function(impact_data,
     dplyr::select(-rowname)
 
   return(impact_matrix)
-
 }
-
-
-category<-impact_cat(eicat_data,full_species_list)
-
-species_list<-sort(unique(acacia_cube$data$scientificName))
-
-acacia_cube$data<-left_join(acacia_cube$data,category, by=join_by("scientificName"=="rowname"))
-
-length(unique(acacia_cube$data$cellCode))
-
-occ_density_ts(acacia_cube)
