@@ -52,12 +52,11 @@ head(acacia_cube$coords)
 ```
 # Aggregate impact scores for each species
 
-There are various impact scores for each species due to mechanisms and region of 
-impact. There is need to aggregate these impact scores for each species. The 
-`impact_cat()` aggregate impact using ***max***, ***mean*** and  ***max_mech*** as metrics used by different studies. 
+There are often several impact records per species in different mechanisms and regions. There is need to aggregate these impact records for each species. The 
+`impact_cat()` aggregates impact using ***max***, ***mean*** and  ***max_mech*** as metrics as used by different studies. 
 
-- ***max***: maximum impact score across all categories recorded for the species\
-- ***mean***: mean impact score across all categories\
+- ***max***: maximum impact score across all records for the species\
+- ***mean***: mean impact score across all records\
 - ***max_mech***: sum of the maximum impact per mechanisms
 
 ```{r }
@@ -75,9 +74,9 @@ agg_impact
 # Compute impact indicator by summing impact risk map
 
 
-The impact risk map shows the impact score for each site, where multiple species are present. To compute the risk per site, aggregated scores across species at each site are needed. The 
+The impact risk map shows the impact score for each site, where multiple species can be present. To compute the risk per site, aggregated scores across species at each site are needed. The 
 `impact_indicator` uses ***max***, ***sum*** and ***mean*** metrics to aggregate
-impact scores as proposed by Boulesnane-Guengant et al., 2024 (unpublished). The combinations of aggregation metrics for each species and site lead to five type of
+impact scores as proposed by Boulesnane-Guengant et al., (in preparation). The combinations of aggregation metrics for each species and site leads to five type of
 indicators, namely, ***precautionary***, ***precautionary cumulative***, ***mean***, ***mean cumulative*** and ***cumulative***.\
 
 
