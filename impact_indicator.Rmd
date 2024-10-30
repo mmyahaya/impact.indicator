@@ -1,6 +1,6 @@
 ---
 title: "Code to calculate the impact indicator"
-author: "Mukhtar Yahaya"
+author: "Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi"
 date: "`r Sys.Date()`"
 output:
   html_document: default
