@@ -2,7 +2,9 @@
 title: "Impact indicator of Alien Taxa"
 author: "Mukhtar Yahaya"
 date: "`r Sys.Date()`"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -19,7 +21,6 @@ using `impact_cat()`. The code in on GitHub repository <https://github.com/mmyah
 # Load packages
 library(b3gbi)       # Biodiversity indicators for data cubes
 library(tidyverse)   # Data wrangling and visualisation
-library(knitr)        # Nice tables 
 library(sf)          # Spatial features
 
 
@@ -53,7 +54,7 @@ head(acacia_cube$coords)
 
 There are various impact scores for each species due to mechanisms and region of 
 impact. There is need to aggregate these impact scores for each species. The 
-`impact_cat()` aggregate impact using ***max***, ***mean*** and - ***max_mech*** as metrics used by different studies. 
+`impact_cat()` aggregate impact using ***max***, ***mean*** and  ***max_mech*** as metrics used by different studies. 
 
 - ***max***: maximum impact score across all categories recorded for the species\
 - ***mean***: mean impact score across all categories\
@@ -74,10 +75,9 @@ agg_impact
 # Compute impact indicator by summing impact risk map
 
 
-The impact risk map depict the impact score in each site. There are various species
-in each site. There is need for aggregated scores across species in each site. The 
+The impact risk map shows the impact score for each site, where multiple species are present. To compute the risk per site, aggregated scores across species at each site are needed. The 
 `impact_indicator` uses ***max***, ***sum*** and ***mean*** metrics to aggregate
-impact scores as proposed by Boulesnane-Guengant et al., 2024 (unpublished). The combinations of aggregation metrics for each species and sites leads five type of
+impact scores as proposed by Boulesnane-Guengant et al., 2024 (unpublished). The combinations of aggregation metrics for each species and site lead to five type of
 indicators, namely, ***precautionary***, ***precautionary cumulative***, ***mean***, ***mean cumulative*** and ***cumulative***.\
 
 
@@ -110,6 +110,11 @@ impact_value$sitedf%>%
                        mid = "yellow",
                        high = "red")+
   theme_minimal() +
+   labs(
+    title = "impact risk map (mean cumulative)",
+    y = "Latitude", x="Longitude"
+  )+
+  theme(text=element_text(size=14))+
   facet_wrap(~year)
 ```
 
