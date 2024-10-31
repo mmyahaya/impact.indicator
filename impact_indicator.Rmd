@@ -125,7 +125,10 @@ $$I_i = \frac{\sum{S_i}}{N}$$
 $I_i$ is impact score at year $i$.\
 $S_i$ is the sum of risk map value, where $S=\{s_1,s_2,...,s_n\}$ and $s_n$ is the site score for site $n$\
 $N$ is number of sites occupied through out the study years of the region.\
-**Note**: This is the only method incorporated as at now. Other methods will be considered later.
+**Note**: This is the only method incorporated as at now. Other methods will be considered later.\
+**Note**: A function `impact_uncertainty()` is being developed to use bootstrap 
+method to compute confidence interval of the indicator rather than using `geom_smooth()`
+used below.
 ```{r}
 #sum of impact risk map for each year
 
@@ -162,6 +165,11 @@ impact_value$species_values %>%
 
 ```
 
+# Comparing type of indicators
+
+To compare type of impact indicator for a case study, we provide a plot which can
+be adapted by a user to compare a set of method.
+
 ```{r}
 # plot all type of impact indicators
 types<-c("precautionary",
@@ -188,7 +196,7 @@ all_impact %>%
   geom_line(aes(color = indicator_type),linewidth=1.5)+
   theme_minimal() +
    labs(
-    title = "All type of indicators",
+    title = "Type of indicators",
     y = "impact score"
   )+
   theme(text=element_text(size=14))
