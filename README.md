@@ -1,8 +1,7 @@
-
 Code to calculate the impact indicator
 ================
 Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi
-2024-11-01
+2024-11-03
 
 ## Description
 
@@ -39,14 +38,14 @@ library(sf)          # Spatial features
 
 ``` r
 # Source functions
-source("C:/Users/mukht/Documents/impact.indicator/R/impact_indicator.R")
-source("C:/Users/mukht/Documents/impact.indicator/R/taxa_cube.R")
-source("C:/Users/mukht/Documents/impact.indicator/R/impact_cat.R")
+source("R/impact_indicator.R")
+source("R/taxa_cube.R")
+source("R/impact_cat.R")
 ```
 
 ``` r
 # load the shapefile for study region
-countries_sf<-readRDS(paste0(getwd(),"/Data/countries_shapefile.rds"))
+countries_sf<-readRDS("Data/countries_shapefile.rds")
 SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
 plot(SA.sf, main = "South African map")
 ```
@@ -57,7 +56,7 @@ plot(SA.sf, main = "South African map")
 
 ``` r
 # load the GBIF occurrence data for taxa
-taxa_Acacia<-readRDS(paste0(getwd(),"/Data/taxa_Acacia.rds"))
+taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
 acacia_cube<-taxaFun(taxa=taxa_Acacia,
                     country.sf=SA.sf,
                     res=0.25,
@@ -124,7 +123,7 @@ for each species. The `impact_cat()` aggregates impact using ***max***,
 - ***max_mech***: sum of the maximum impact per mechanisms
 
 ``` r
-eicat_data<-readRDS(paste0(getwd(),"/Data/eicat_data.rds"))
+eicat_data<-readRDS("Data/eicat_data.rds")
 full_species_list<-sort(unique(acacia_cube$cube$data$scientificName))
 eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
                       impact_category) %>% 
@@ -338,4 +337,3 @@ all_impact %>%
 ```
 
 ![](impact_indicator_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
-
