@@ -2,10 +2,12 @@
 title: "Code to calculate the impact indicator"
 author: "Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi"
 date: "`r Sys.Date()`"
-output:
+output: 
+  #github_document: default
   html_document: default
   word_document: default
   pdf_document: default
+  
 ---
 
 ```{r setup, include=FALSE}
@@ -26,15 +28,15 @@ library(sf)          # Spatial features
 
 
 # Source functions
-source("C:/Users/mukht/Documents/impact.indicator/R/impact_indicator.R")
-source("C:/Users/mukht/Documents/impact.indicator/R/taxa_cube.R")
-source("C:/Users/mukht/Documents/impact.indicator/R/impact_cat.R")
+source("R/impact_indicator.R")
+source("R/taxa_cube.R")
+source("R/impact_cat.R")
 
 ```
 
 ```{r}
 # load the shapefile for study region
-countries_sf<-readRDS(paste0(getwd(),"/Data/countries_shapefile.rds"))
+countries_sf<-readRDS("Data/countries_shapefile.rds")
 SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
 plot(SA.sf, main = "South African map")
 ```
@@ -42,7 +44,7 @@ plot(SA.sf, main = "South African map")
 # Process occurrence cube
 ```{r}
 # load the GBIF occurrence data for taxa
-taxa_Acacia<-readRDS(paste0(getwd(),"/Data/taxa_Acacia.rds"))
+taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
 acacia_cube<-taxaFun(taxa=taxa_Acacia,
                     country.sf=SA.sf,
                     res=0.25,
@@ -61,7 +63,7 @@ There are often several impact records per species in different mechanisms and r
 - ***max_mech***: sum of the maximum impact per mechanisms
 
 ```{r }
-eicat_data<-readRDS(paste0(getwd(),"/Data/eicat_data.rds"))
+eicat_data<-readRDS("Data/eicat_data.rds")
 full_species_list<-sort(unique(acacia_cube$cube$data$scientificName))
 eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
                       impact_category) %>% 
@@ -167,7 +169,7 @@ impact_value$species_values %>%
 
 # Comparing type of indicators
 
-To compare type of impact indicator for a case study, we provide a plot which can
+To compare type of impact indicators for a case study, we provide a plot which can
 be adapted by a user to compare a set of method.
 
 ```{r}
