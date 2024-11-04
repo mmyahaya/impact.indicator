@@ -10,7 +10,7 @@
 #'name of the focal taxa while the dataframe is the GBIF occurrences data which must
 #'contain "decimalLatitude","decimalLongitude","species","speciesKey",
 #'"coordinateUncertaintyInMeters","dateIdentified", and "year".
-#'@param country.sf sf object. The shapefile of the region of study
+#'@param region sf object. The shapefile of the region of study
 #'@param limit Integer. Number of records to return from GBIF download.
 #'Default is set to 500
 
@@ -23,16 +23,16 @@
 #'
 
 taxaFun <- function(taxa,
-                    country.sf,
+                    region,
                     limit=500,
-                    country='ZA',
+                    country=NULL,
                     res=0.25,
-                    first_year=NULL){
+                    first_year=NULL,...){
 
-  grid <- country.sf %>%
+  grid <- region %>%
     sf::st_make_grid(cellsize = c(res,res),
-                     offset = c(sf::st_bbox(country.sf)$xmin,
-                                sf::st_bbox(country.sf)$ymin)) %>%
+                     offset = c(sf::st_bbox(region)$xmin,
+                                sf::st_bbox(region)$ymin)) %>%
     sf::st_sf() %>%
     dplyr::mutate(cellid = dplyr::row_number())
   
@@ -44,20 +44,24 @@ taxaFun <- function(taxa,
 
   # download taxaif the scientific name is given as character
   if("character" %in% class(taxa)){
-    taxa.gbif_download = rgbif::occ_data(scientificName=taxa, # download data from gbif
+    taxa.gbif_download = rgbif::occ_data(scientificName=taxa, 
                                          country=country,
                                          hasCoordinate=TRUE,
                                          hasGeospatialIssue=FALSE,
                                          limit = limit)
-
-    taxa.df = as.data.frame(taxa.gbif_download$data) #extract data from the downloaded file
-  } else if("data.frame" %in% class(taxa)){ #check if data fame contains the required columns
+    #extract data from the downloaded file
+    taxa.df = as.data.frame(taxa.gbif_download$data) 
+    #check if data fame contains the required columns
+  } else if("data.frame" %in% class(taxa)){ 
     if(any(!c("decimalLatitude","decimalLongitude",
               "species","speciesKey","coordinateUncertaintyInMeters",
-              "dateIdentified","year") %in% colnames(taxa))){
+              "year") %in% colnames(taxa))){
       requiredcol<-c("decimalLatitude","decimalLongitude","species",
-                     "speciesKey","iucnRedListCategory","coordinateUncertaintyInMeters","dateIdentified","year")
-      missingcol<-requiredcol[!c("decimalLatitude","decimalLongitude","species","speciesKey","coordinateUncertaintyInMeters","dateIdentified","year") %in% colnames(taxa)]
+                     "speciesKey","coordinateUncertaintyInMeters",
+                     "year")
+      missingcol<-requiredcol[!c("decimalLatitude","decimalLongitude","species",
+                                 "speciesKey","coordinateUncertaintyInMeters",
+                                 "year") %in% colnames(taxa)]
       cli::cli_abort(c("{missingcol} is/are not in the {.var taxa} column ",
                        "x" = "{.var taxa} should be a data of GBIF format "))
     }
@@ -70,23 +74,16 @@ taxaFun <- function(taxa,
 
   taxa.sf = taxa.df %>%
     dplyr::select(decimalLatitude,decimalLongitude,
-                  species,speciesKey,iucnRedListCategory,
+                  species,speciesKey,
                   coordinateUncertaintyInMeters,year) %>% #select occurrence data
     dplyr::filter_all(all_vars(!is.na(.))) %>% # remove rows with missing data
     dplyr::filter(coordinateUncertaintyInMeters<=res*1000) %>%
-    #dplyr::mutate(coordinateUncertaintyInMeters = coordinateUncertaintyInMeters/(res*1000)^2) %>%
-    #dplyr::mutate(dateIdentified = as.Date(dateIdentified)) %>%  # convert date to date format
     sf::st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
                  crs = 4326) %>%
     sf::st_join(grid) %>%
     as.data.frame() %>%
     dplyr::select(-geometry) %>%
     dplyr::mutate(occurrences=1)
-  # %>%
-  #   dplyr::group_by(species,coordinateUncertaintyInMeters,year,speciesKey,
-  #                   iucnRedListCategory,
-  #                   cellid) %>%
-  #   dplyr::summarise(across(occurrences, sum), .groups = "drop")
 
 
   taxa_cube<-b3gbi::process_cube(taxa.sf,grid_type = "custom",

@@ -10,20 +10,21 @@ impact_cat<-function(impact_data,
     impact_data <- impact_data %>%
       rename(all_of(c(impact_category=col_impact, scientific_name=col_name)))
 
-  } else{ stop("required column is not given")}
+  } else{ stop("impact_category and scientific_name are not found in  impact_data. col_impact and col_name must be given")}
 
-  category_max_mean <- eicat_data %>%
+  category_max_mean <- impact_data %>%
     mutate(impact_category = substr(impact_category, 1, 2)) %>%
     filter(impact_category %in% c("MC", "MN", "MO", "MR", "MV")) %>%
-    select(scientific_name, impact_mechanism, impact_category) %>%
-    mutate(category_value = case_when(
-      impact_category == "MC" ~ 0,
-      impact_category == "MN" ~ 1,
-      impact_category == "MO" ~ 2,
-      impact_category == "MR" ~ 3,
-      impact_category == "MV" ~ 4,
-      TRUE ~ 0  # Default case
-    )) %>%
+    select(scientific_name, impact_mechanism, impact_category) %>% 
+    mutate(category_value=cat_num(impact_category,3)) %>%
+    # mutate(category_value = case_when(
+    #   impact_category == "MC" ~ 0,
+    #   impact_category == "MN" ~ 1,
+    #   impact_category == "MO" ~ 2,
+    #   impact_category == "MR" ~ 3,
+    #   impact_category == "MV" ~ 4,
+    #   TRUE ~ 0  # Default case
+    # )) %>%
     distinct(scientific_name, impact_mechanism, impact_category, 
              .keep_all = TRUE) %>%
     group_by(scientific_name) %>%
@@ -39,14 +40,15 @@ impact_cat<-function(impact_data,
     dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
     dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>%
     dplyr::select(scientific_name,impact_mechanism,impact_category) %>%
-    dplyr::mutate(category_value = case_when(
-      impact_category == "MC" ~ 0,
-      impact_category == "MN" ~1,
-      impact_category == "MO" ~2,
-      impact_category == "MR" ~3,
-      impact_category == "MV" ~4,
-      TRUE ~ 0  # Default case, if any value falls outside the specified ranges
-    )) %>%
+    mutate(category_value=cat_num(impact_category,3)) %>% 
+    # dplyr::mutate(category_value = case_when(
+    #   impact_category == "MC" ~ 0,
+    #   impact_category == "MN" ~1,
+    #   impact_category == "MO" ~2,
+    #   impact_category == "MR" ~3,
+    #   impact_category == "MV" ~4,
+    #   TRUE ~ 0  # Default case, if any value falls outside the specified ranges
+    # )) %>%
     distinct(scientific_name,impact_mechanism,impact_category, 
              .keep_all = TRUE) %>%
 
@@ -85,4 +87,24 @@ impact_cat<-function(impact_data,
     dplyr::select(-rowname)
 
   return(impact_matrix)
+}
+
+
+
+
+cat_num<-function(cat,trans){
+  name<-c("MC", "MN", "MO", "MR", "MV")
+  if(trans==1){
+    x<-c(0,1,2,3,4)
+    names(x)<-name
+  } else if (trans==2){
+    x<-c(1,2,3,4,5)
+    names(x)<-name
+  }
+  else if (trans==3){
+    x<-c(0,1,10,100,1000,10000)
+    names(x)<-name
+  } else { stop("`trans` must be 1, 2, or 3")}
+  
+  return(x[cat])
 }

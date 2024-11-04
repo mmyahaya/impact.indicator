@@ -46,7 +46,7 @@ plot(SA.sf, main = "South African map")
 # load the GBIF occurrence data for taxa
 taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
 acacia_cube<-taxaFun(taxa=taxa_Acacia,
-                    country.sf=SA.sf,
+                    region=SA.sf,
                     res=0.25,
                     first_year=2010)
 
