@@ -1,5 +1,5 @@
-install.packages("devtools")
-devtools::install_github("b-cubed-eu/b3gbi")
+# install.packages("devtools")
+# devtools::install_github("b-cubed-eu/b3gbi")
 
 
 impact_indicator<-function(cube,
@@ -199,23 +199,23 @@ impact_indicator<-function(cube,
     coords<-left_join(coords,siteScore,by="siteID")
     # Species impact
     speciesScore<-colSums(impactScore,na.rm = TRUE)/cube$num_cells
-    
+
     speciesScore%>%
       as.data.frame() %>%
       t() %>%
-      as.data.frame() 
-    
-    
+      as.data.frame()
+
+
 
     species_values<-bind_rows(species_values,speciesScore)
 
 
 
   }
-  
+
   species_values<- species_values%>%
     select(any_of(impact_species))
- 
+
   impact_values<-as.data.frame(impact_values)
   names(impact_values)<-c("year","value")
   rownames(species_values)<-as.character(period)
