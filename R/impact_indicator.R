@@ -1,5 +1,5 @@
 # install.packages("devtools")
-#devtools::install_github("b-cubed-eu/b3gbi")
+# devtools::install_github("b-cubed-eu/b3gbi")
 
 
 impact_indicator<-function(cube,
@@ -63,13 +63,13 @@ impact_indicator<-function(cube,
 
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
-          
+
           siteScore<- siteScore%>%
-            as.data.frame() %>% 
+            as.data.frame() %>%
             tibble::rownames_to_column(var = "siteID")
-          
+
           names(siteScore)[2]<-as.character(y)
-          
+
         } else {
 
           #Precautionary cumulative
@@ -79,14 +79,14 @@ impact_indicator<-function(cube,
 
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
-          
+
           siteScore<- siteScore%>%
-            as.data.frame() %>% 
+            as.data.frame() %>%
             tibble::rownames_to_column(var = "siteID")
-          
+
           names(siteScore)[2]<-as.character(y)
-          
-          
+
+
         }
       }
       else { # return NA if no species has impact
@@ -122,13 +122,13 @@ impact_indicator<-function(cube,
 
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
-          
+
           siteScore<- siteScore%>%
-            as.data.frame() %>% 
+            as.data.frame() %>%
             tibble::rownames_to_column(var = "siteID")
-          
+
           names(siteScore)[2]<-as.character(y)
-          
+
         } else {
 
           #mean
@@ -139,9 +139,9 @@ impact_indicator<-function(cube,
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
           siteScore<- siteScore%>%
-            as.data.frame() %>% 
+            as.data.frame() %>%
             tibble::rownames_to_column(var = "siteID")
-          
+
           names(siteScore)[2]<-as.character(y)
         }
       }
@@ -179,11 +179,11 @@ impact_indicator<-function(cube,
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
           siteScore<- siteScore%>%
-            as.data.frame() %>% 
+            as.data.frame() %>%
             tibble::rownames_to_column(var = "siteID")
-          
+
           names(siteScore)[2]<-as.character(y)
-          
+
         }
       }
       else { # return NA is no species has impact
@@ -195,27 +195,27 @@ impact_indicator<-function(cube,
 
 
     }
-    
+
     coords<-left_join(coords,siteScore,by="siteID")
     # Species impact
     speciesScore<-colSums(impactScore,na.rm = TRUE)/cube$num_cells
-    
+
     speciesScore%>%
       as.data.frame() %>%
       t() %>%
-      as.data.frame() 
-    
-    
+      as.data.frame()
+
+
 
     species_values<-bind_rows(species_values,speciesScore)
 
 
 
   }
-  
+
   species_values<- species_values%>%
     select(any_of(impact_species))
- 
+
   impact_values<-as.data.frame(impact_values)
   names(impact_values)<-c("year","value")
   rownames(species_values)<-as.character(period)
