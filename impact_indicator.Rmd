@@ -25,9 +25,9 @@ library(sf)          # Spatial features
 
 
 # Source functions
-source("C:/Users/mukht/Documents/impact.indicator/R/impact_indicator.R")
-source("C:/Users/mukht/Documents/impact.indicator/R/taxa_cube.R")
-source("C:/Users/mukht/Documents/impact.indicator/R/impact_cat.R")
+source("R/impact_indicator.R")
+source("R/taxa_cube.R")
+source("R/impact_cat.R")
 
 ```
 
