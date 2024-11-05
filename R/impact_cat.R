@@ -1,7 +1,8 @@
 impact_cat<-function(impact_data,
                      species_list,
                      col_impact=NULL,
-                     col_name=NULL){
+                     col_name=NULL,
+                     trans=1){
 
 
   if(all(c("impact_category","scientific_name")%in%names(impact_data))){
@@ -16,7 +17,7 @@ impact_cat<-function(impact_data,
     mutate(impact_category = substr(impact_category, 1, 2)) %>%
     filter(impact_category %in% c("MC", "MN", "MO", "MR", "MV")) %>%
     select(scientific_name, impact_mechanism, impact_category) %>% 
-    mutate(category_value=cat_num(impact_category,3)) %>%
+    mutate(category_value=cat_num(impact_category,trans)) %>%
     # mutate(category_value = case_when(
     #   impact_category == "MC" ~ 0,
     #   impact_category == "MN" ~ 1,
@@ -40,7 +41,7 @@ impact_cat<-function(impact_data,
     dplyr::mutate(impact_category=substr(impact_category,1,2)) %>%
     dplyr::filter(impact_category %in% c("MC","MN","MO","MR","MV")) %>%
     dplyr::select(scientific_name,impact_mechanism,impact_category) %>%
-    mutate(category_value=cat_num(impact_category,3)) %>% 
+    mutate(category_value=cat_num(impact_category,trans)) %>% 
     # dplyr::mutate(category_value = case_when(
     #   impact_category == "MC" ~ 0,
     #   impact_category == "MN" ~1,
@@ -60,18 +61,12 @@ impact_cat<-function(impact_data,
                      .groups = "drop") %>%
     dplyr::filter(scientific_name %in% species_list)
 
-
-   
-
-
     category_M<-dplyr::left_join(category_max_mean,category_sum_mech,
                         by=join_by(scientific_name)) %>%
     tibble::column_to_rownames(var = "scientific_name")
 
     names(category_M)<-c("max","mean","max_mech")
 
-
-  #impact_matrix<-category_M %>% dplyr::select(all_of(fun))
   impact_matrix<-category_M
 
   na.df<-as.data.frame(matrix(NA,
