@@ -2,13 +2,23 @@
 title: "Code to calculate the impact indicator"
 author: "Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi, Cang Hui"
 date: "`r Sys.Date()`"
-output: 
-  #github_document: default
-  html_document: default
-  word_document: default
-  pdf_document: default
-  
+output: github_document
 ---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# impact.indicator
+
+<!-- badges: start -->
+<!-- badges: end -->
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
