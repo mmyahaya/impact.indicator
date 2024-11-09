@@ -134,7 +134,11 @@ eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
 #>  9 Acacia cyclops      Western Cape             (11) Structural… MO - Moderate  
 #> 10 Acacia dealbata     Ourense (NW of Spain)    (9) Chemical Im… MR - Major
 agg_impact<-impact_cat(impact_data=eicat_data,
-                     species_list=full_species_list)
+                     species_list=full_species_list,
+                     col_category="impact_category",
+                     col_species="scientific_name",
+                     col_mechanism="impact_mechanism",
+                     trans=1)
 agg_impact
 #>                       max     mean max_mech
 #> Acacia acinacea        NA       NA       NA
@@ -187,6 +191,10 @@ cumulative***, ***mean***, ***mean cumulative*** and ***cumulative***.
 ``` r
 impact_value<-impact_indicator(cube=acacia_cube$cube,
                                impact_data = eicat_data,
+                               col_category="impact_category",
+                               col_species="scientific_name",
+                               col_mechanism="impact_mechanism",
+                               trans=1,
                                type = "mean cumulative",
                                coords=acacia_cube$coords)
 ```
@@ -204,8 +212,7 @@ impact_value$sitedf%>%
   geom_tile(
     aes(x=X,y=Y,fill=impact),color="black")+
   geom_sf(data = SA.sf, fill = NA, color = "black", alpha = 0.5)+
-  scale_fill_gradient2(low = "forestgreen",
-                       mid = "yellow",
+  scale_fill_gradient(low = "yellow",
                        high = "red")+
   theme_minimal() +
    labs(
@@ -297,8 +304,10 @@ all_impact<-data.frame("year"=unique(acacia_cube$cube$data$year))
 for(type in types){
   impact_value<-impact_indicator(cube=acacia_cube$cube,
                                  impact_data = eicat_data,
-                                 col_impact=NULL,
-                                 col_name=NULL,
+                                 col_category="impact_category",
+                                 col_species="scientific_name",
+                                 col_mechanism="impact_mechanism",
+                                 trans=1,
                                  type = type,
                                  coords=acacia_cube$coords)
   
