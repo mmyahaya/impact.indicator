@@ -1,18 +1,16 @@
 #' @title Prepare Data Cubes
 #'
-#'@description Prepare data cube to calculate species impact . The function `taxa_cube`
+#' @description Prepare data cube to calculate species impact . The function `taxa_cube`
 #' can take in the scientific name of the taxa of interest as in character or
 #' GBIF occurrences data containing necessary columns. The GBIF occurrences is
-#' downloaded if scientific names is given. The function returns data cubes of
-#' focal taxa and reference taxa. If the reference taxa is not specified, the
-#' function returns the focal taxa as reference taxa.
-#'@param taxa Character or dataframe. The character should be the scientific
-#'name of the focal taxa while the dataframe is the GBIF occurrences data which must
-#'contain "decimalLatitude","decimalLongitude","species","speciesKey",
-#'"coordinateUncertaintyInMeters","dateIdentified", and "year".
-#'@param region sf object. The shapefile of the region of study
-#'@param limit Integer. Number of records to return from GBIF download.
-#'Default is set to 500
+#' downloaded if scientific names is given.
+#' @param taxa Character or dataframe. The character should be the scientific
+#' name of the focal taxa while the dataframe is the GBIF occurrences data which must
+#' contain "decimalLatitude","decimalLongitude","species","speciesKey",
+#' "coordinateUncertaintyInMeters","dateIdentified", and "year".
+#' @param region sf object. The shapefile of the region of study
+#' @param limit Integer. Number of records to return from GBIF download.
+#' Default is set to 500
 
 #' @param country Character. Country for which the GBIP occurrences data should
 #' be downloaded. Country should be 2-letter country code (ISO-3166-1).
@@ -94,7 +92,6 @@ taxaFun <- function(taxa,
                                  cols_speciesKey = "speciesKey",
       cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters",
       first_year = first_year)
-
 
   return(list("cube"=taxa_cube,"coords"=coords))
 }
