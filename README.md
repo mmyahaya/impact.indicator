@@ -2,12 +2,9 @@ Code to calculate the impact indicator
 ================
 Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi, Cang
 Hui
-2024-11-07
+2024-11-09
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-# impact.indicator
-
 <!-- badges: start -->
 <!-- badges: end -->
 
@@ -137,9 +134,7 @@ eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
 #>  9 Acacia cyclops      Western Cape             (11) Structural… MO - Moderate  
 #> 10 Acacia dealbata     Ourense (NW of Spain)    (9) Chemical Im… MR - Major
 agg_impact<-impact_cat(impact_data=eicat_data,
-                     species_list=full_species_list,
-                     col_impact=NULL,
-                     col_name=NULL)
+                     species_list=full_species_list)
 agg_impact
 #>                       max     mean max_mech
 #> Acacia acinacea        NA       NA       NA
@@ -192,8 +187,6 @@ cumulative***, ***mean***, ***mean cumulative*** and ***cumulative***.
 ``` r
 impact_value<-impact_indicator(cube=acacia_cube$cube,
                                impact_data = eicat_data,
-                               col_impact=NULL,
-                               col_name=NULL,
                                type = "mean cumulative",
                                coords=acacia_cube$coords)
 ```

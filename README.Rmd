@@ -14,7 +14,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-# impact.indicator
 
 <!-- badges: start -->
 <!-- badges: end -->
@@ -79,9 +78,7 @@ eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
                       impact_category) %>% 
   head(10)
 agg_impact<-impact_cat(impact_data=eicat_data,
-                     species_list=full_species_list,
-                     col_impact=NULL,
-                     col_name=NULL)
+                     species_list=full_species_list)
 agg_impact
 ```
 # Compute impact risk map
@@ -101,8 +98,6 @@ indicators, namely, ***precautionary***, ***precautionary cumulative***, ***mean
 ```{r}
 impact_value<-impact_indicator(cube=acacia_cube$cube,
                                impact_data = eicat_data,
-                               col_impact=NULL,
-                               col_name=NULL,
                                type = "mean cumulative",
                                coords=acacia_cube$coords)
 ```
