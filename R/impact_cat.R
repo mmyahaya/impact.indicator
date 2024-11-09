@@ -1,17 +1,36 @@
+#' Title
+#'
+#' @param impact_data 
+#' @param species_list 
+#' @param col_impact 
+#' @param col_name 
+#' @param trans 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 impact_cat<-function(impact_data,
                      species_list,
                      col_impact=NULL,
                      col_name=NULL,
+                     col_mech=NULL,
                      trans=1){
 
 
-  if(all(c("impact_category","scientific_name")%in%names(impact_data))){
+  if(all(c("impact_category",
+           "scientific_name",
+           "impact_mechanism")%in%names(impact_data))){
     impact_data<-impact_data
-  } else if((!is.null(col_impact)&!is.null(col_name))){
+  } else if(all(c(!is.null(col_impact),
+                  !is.null(col_name),
+                  !is.null(col_mech)))){
     impact_data <- impact_data %>%
-      rename(all_of(c(impact_category=col_impact, scientific_name=col_name)))
+      rename(all_of(c(impact_category=col_impact,
+                      scientific_name=col_name,
+                      impact_mechanism=col_mech)))
 
-  } else{ stop("impact_category and scientific_name are not found in  impact_data. col_impact and col_name must be given")}
+  } else{ stop("impact_category, scientific_name and impact_mechanism are not found in  impact_data. col_impact and col_name must be given")}
 
   category_max_mean <- impact_data %>%
     mutate(impact_category = substr(impact_category, 1, 2)) %>%
