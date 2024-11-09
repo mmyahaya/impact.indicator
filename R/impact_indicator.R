@@ -4,9 +4,10 @@
 
 impact_indicator<-function(cube,
                            impact_data = NULL,
-                           col_impact=NULL,
-                           col_name=NULL,
-                           col_mech=NULL,
+                           col_category=NULL,
+                           col_species=NULL,
+                           col_mechanism=NULL,
+                           trans=1,
                            type=NULL,
                            coords=NULL){
 
@@ -30,9 +31,10 @@ impact_indicator<-function(cube,
     if (!exists("eicat_score_list")){
       eicat_score_list=impact_cat(impact_data = impact_data,
                                   species_list = full_species_list,
-                                  col_impact=col_impact,
-                                  col_name=col_name,
-                                  col_mech = col_mech)
+                                  col_category=col_category,
+                                  col_species=col_species,
+                                  col_mechanism = col_mechanism,
+                                  trans = trans)
 
       impact_species <- eicat_score_list %>%
         na.omit() %>%
@@ -207,11 +209,7 @@ impact_indicator<-function(cube,
       t() %>%
       as.data.frame()
 
-
-
     species_values<-bind_rows(species_values,speciesScore)
-
-
 
   }
 
