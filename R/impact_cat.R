@@ -1,17 +1,47 @@
-#' Title
+#' Impact categories
 #'
-#' @param impact_data The data frame of species impact with columns of category,
-#'  species
-#' @param species_list 
-#' @param col_category 
-#' @param col_species 
-#' @param trans 
-#' @param col_mechanism 
-#'
-#' @return
+#' @description
+#' Aggregate species impact categories from impact data.
+#' 
+#' @param impact_data The dataframe of species impact which contains columns of category,
+#'  species and mechanism.
+#' @param species_list The vector of species' list to aggregate their impact categories
+#' @param col_category The name of the column containing the impact categories.
+#' The first two letters each categories must be an EICAT short names 
+#' (e.g "MC -Minimal concern")
+#' @param col_species The name of the column containing species names 
+#' @param col_mechanism The name of the column containing mechanisms of impact
+#' @param trans Numeric. The type of transformation to convert the EICAT categories to 
+#' numerical values. 1 converts ("MC", "MN", "MO", "MR", "MV") to (0,1,2,3,4)
+#' 2 converts ("MC", "MN", "MO", "MR", "MV") to (1,2,3,4,5) and 
+#' 3 converts ("MC", "MN", "MO", "MR", "MV") to (1,10,100,1000,10000)
+#' 
+#' @return The dataframe containing the aggregated species impact. max - maximum
+#' impact of a species. mean - mean impact of a species. max_mech - sum of maximum
+#' impact per categories of a species
 #' @export
 #'
 #' @examples
+#' #read the impact data
+#' eicat_data<-readRDS("Data/eicat_data.rds")
+#' #define species list
+#' species_list<-c("Acacia adunca", 
+#' "Acacia baileyana", 
+#' "Acacia binervata", 
+#' "Acacia crassiuscula",
+#' "Acacia cultriformis", 
+#' "Acacia cyclops", 
+#' "Acacia dealbata", 
+#' "Acacia decurrens", 
+#' "Acacia elata")
+#' 
+#' agg_impact<-impact_cat(impact_data=eicat_data,
+#'                      species_list=species_list,
+#'                      col_category="impact_category",
+#'                      col_species="scientific_name",
+#'                      col_mechanism="impact_mechanism",
+#'                      trans=1)
+#'                      
 impact_cat<-function(impact_data,
                      species_list,
                      col_category=NULL,
@@ -35,14 +65,14 @@ impact_cat<-function(impact_data,
   } else{ stop("category, species and mechanism are not found in  impact_data. col_category and col_species must be given")}
 
   category_max_mean <- impact_data %>%
-    mutate(category = substr(category, 1, 2)) %>%
-    filter(category %in% c("MC", "MN", "MO", "MR", "MV")) %>%
-    select(species, mechanism, category) %>% 
-    mutate(category_value=cat_num(category,trans)) %>%
-    distinct(species, mechanism, category, 
+    dplyr::mutate(category = substr(category, 1, 2)) %>%
+    dplyr::filter(category %in% c("MC", "MN", "MO", "MR", "MV")) %>%
+    dplyr::select(species, mechanism, category) %>% 
+    dplyr::mutate(category_value=cat_num(category,trans)) %>%
+    dplyr::distinct(species, mechanism, category, 
              .keep_all = TRUE) %>%
-    group_by(species) %>%
-    summarise(
+    dplyr::group_by(species) %>%
+    dplyr::summarise(
       max_value = max(category_value, na.rm = TRUE),
       mean_value = mean(category_value, na.rm = TRUE),
       .groups = "drop"
@@ -54,8 +84,8 @@ impact_cat<-function(impact_data,
     dplyr::mutate(category=substr(category,1,2)) %>%
     dplyr::filter(category %in% c("MC","MN","MO","MR","MV")) %>%
     dplyr::select(species,mechanism,category) %>%
-    mutate(category_value=cat_num(category,trans)) %>% 
-    distinct(species,mechanism,category, 
+    dplyr::mutate(category_value=cat_num(category,trans)) %>% 
+    dplyr::distinct(species,mechanism,category, 
              .keep_all = TRUE) %>%
 
     dplyr::group_by(species,mechanism) %>%
@@ -94,6 +124,20 @@ impact_cat<-function(impact_data,
 
 
 
+#' Convert EICAT categories to numerical values
+#'
+#' @param cat The EICAT impct category. (e.g., "MC)
+#' @param trans Numeric. The type of transformation to convert the EICAT categories to 
+#' numerical values. 1 converts ("MC", "MN", "MO", "MR", "MV") to (0,1,2,3,4)
+#' 2 converts ("MC", "MN", "MO", "MR", "MV") to (1,2,3,4,5) and 
+#' 3 converts ("MC", "MN", "MO", "MR", "MV") to (1,10,100,1000,10000)
+#' 
+#' @return Numerical values corresponding to the EICAT  base on a tranfomation
+#'
+#' @examples
+#' cat<-"MC"
+#' trans<-1
+#' value<-cat_num(cat,trans)
 cat_num<-function(cat,trans){
   name<-c("MC", "MN", "MO", "MR", "MV")
   if(trans==1){
