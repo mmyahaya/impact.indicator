@@ -1,7 +1,27 @@
-# install.packages("devtools")
-# devtools::install_github("b-cubed-eu/b3gbi")
-
-
+#' Title
+#'
+#' @param cube The list containing data cube of class `sim_cube` from 
+#' `b3gbi::process_cube()`.
+#' @param impact_data The dataframe of species impact which contains columns of category,
+#'  species and mechanism.
+#' @param col_category The name of the column containing the impact categories.
+#' The first two letters each categories must be an EICAT short names 
+#' (e.g "MC - Minimal concern")
+#' @param col_species The name of the column containing species names 
+#' @param col_mechanism The name of the column containing mechanisms of impact
+#' @param trans Numeric. The type of transformation to convert the EICAT categories to 
+#' numerical values. 1 converts ("MC", "MN", "MO", "MR", "MV") to (0,1,2,3,4)
+#' 2 converts ("MC", "MN", "MO", "MR", "MV") to (1,2,3,4,5) and 
+#' 3 converts ("MC", "MN", "MO", "MR", "MV") to (1,10,100,1000,10000)
+#' @param type The type indicators based on the aggregation of within and 
+#' across species in a site. The type can be precautionary, precautionary cumulative,
+#' mean, mean cumulative or cumulative. 
+#' @param coords The dataframe containing coordinates of the sites of the region. 
+#'
+#' @return
+#' @export
+#'
+#' @examples
 impact_indicator<-function(cube,
                            impact_data = NULL,
                            col_category=NULL,
