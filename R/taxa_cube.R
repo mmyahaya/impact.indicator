@@ -34,6 +34,12 @@ taxaFun <- function(taxa,
     sf::st_sf() %>%
     dplyr::mutate(cellid = dplyr::row_number())
   
+  grid_filtered <- grid %>% 
+    sf::st_intersection(region) %>% 
+    suppressMessages() %>% 
+    dplyr::select(cellid,geometry)
+    
+  
   # get coordinates of the occurrence sites
   coords <- sf::st_coordinates(sf::st_centroid(grid)) %>% 
     as.data.frame() %>% 
@@ -78,7 +84,7 @@ taxaFun <- function(taxa,
     dplyr::filter(coordinateUncertaintyInMeters<=res*1000) %>%
     sf::st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
                  crs = 4326) %>%
-    sf::st_join(grid) %>%
+    sf::st_join(grid_filtered) %>%
     as.data.frame() %>%
     dplyr::select(-geometry) %>%
     dplyr::mutate(occurrences=1)

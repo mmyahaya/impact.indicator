@@ -59,18 +59,20 @@ acacia_cube<-taxaFun(taxa=taxa_Acacia,
                     region=SA.sf,
                     res=0.25,
                     first_year=2010)
+#> Warning: attribute variables are assumed to be spatially constant throughout
+#> all geometries
 
 acacia_cube$cube
 #> 
 #> Simulated data cube for calculating biodiversity indicators
 #> 
 #> Date Range: 2010 - 2024 
-#> Number of cells: 369 
+#> Number of cells: 366 
 #> Grid reference system: custom 
 #> Coordinate range:
 #> [1] "Coordinates not provided"
 #> 
-#> Total number of observations: 5559 
+#> Total number of observations: 5323 
 #> Number of species represented: 25 
 #> Number of families represented: Data not present 
 #> 
@@ -78,7 +80,7 @@ acacia_cube$cube
 #> 
 #> First 10 rows of data (use n = to show more):
 #> 
-#> # A tibble: 5,559 × 6
+#> # A tibble: 5,323 × 6
 #>    scientificName   taxonKey minCoordinateUncertaintyInMe…¹  year cellCode   obs
 #>    <chr>               <dbl>                          <dbl> <dbl>    <int> <dbl>
 #>  1 Acacia implexa    2979232                              1  2010      206     1
@@ -91,7 +93,7 @@ acacia_cube$cube
 #>  8 Acacia saligna    2978552                              1  2011      206     1
 #>  9 Acacia saligna    2978552                             15  2011     1312     1
 #> 10 Acacia mearnsii   2979775                              1  2011      230     1
-#> # ℹ 5,549 more rows
+#> # ℹ 5,313 more rows
 #> # ℹ abbreviated name: ¹​minCoordinateUncertaintyInMeters
 head(acacia_cube$coords)
 #>   siteID        X       Y
@@ -117,6 +119,7 @@ for each species. The `impact_cat()` aggregates impact using ***max***,
 ``` r
 eicat_data<-readRDS("Data/eicat_data.rds")
 full_species_list<-sort(unique(acacia_cube$cube$data$scientificName))
+#display part of data
 eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
                       impact_category) %>% 
   head(10)

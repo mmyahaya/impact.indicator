@@ -75,6 +75,7 @@ There are often several impact records per species in different mechanisms and r
 ```{r }
 eicat_data<-readRDS("Data/eicat_data.rds")
 full_species_list<-sort(unique(acacia_cube$cube$data$scientificName))
+#display part of data
 eicat_data %>% select(scientific_name,impact_region,impact_mechanism,
                       impact_category) %>% 
   head(10)
