@@ -1,4 +1,4 @@
-#' Impact categories
+#' Compute impact categories
 #'
 #' @description
 #' Aggregate species impact categories from impact data.

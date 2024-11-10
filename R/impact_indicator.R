@@ -1,4 +1,4 @@
-#' Title
+#' Compute impact indicator
 #'
 #' @param cube The list containing data cube of class `sim_cube` from 
 #' `b3gbi::process_cube()`.
@@ -18,7 +18,8 @@
 #' mean, mean cumulative or cumulative. 
 #' @param coords The dataframe containing coordinates of the sites of the region. 
 #'
-#' @return
+#' @return A list containing dataframes impact indicator, species impact indicator
+#' and sites impact indicator
 #' @export
 #'
 #' @examples
@@ -33,9 +34,14 @@ impact_indicator<-function(cube,
 
 
   full_species_list<-sort(unique(cube$data$scientificName))
+  
   period<-unique(cube$data$year)
+  
+  #create empty vector and dataframe for impact indicators and species impact
+  #indicator
   impact_values<-c()
   species_values<-data.frame()
+  
   for(y in period){
     sbs.taxon<-cube$data %>%
       dplyr::filter(year==y) %>%
@@ -221,7 +227,7 @@ impact_indicator<-function(cube,
     }
 
     coords<-left_join(coords,siteScore,by="siteID")
-    # Species impact
+    # Site impact sport
     speciesScore<-colSums(impactScore,na.rm = TRUE)/cube$num_cells
 
     speciesScore%>%
