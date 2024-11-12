@@ -2,7 +2,7 @@ Code to calculate the impact indicator
 ================
 Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi, Cang
 Hui
-2024-11-10
+2024-11-12
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
@@ -13,7 +13,7 @@ Hui
 This R Markdown demonstrates the computation of an impact indicator for
 biological invasions using the `impact_indicator()`. The
 `impact_indicator()` feeds in species occurrence cube from the
-`b3gbi::process_cube()` using `taxaFun()` and processed Environmental
+`b3gbi::process_cube()` using `taxa_cube()` and processed Environmental
 Impact Classification of Alien Taxa (EICAT) impact score of species
 using `impact_cat()`.
 
@@ -55,7 +55,7 @@ plot(SA.sf, main = "South African map")
 ``` r
 # load the GBIF occurrence data for taxa
 taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
-acacia_cube<-taxaFun(taxa=taxa_Acacia,
+acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                     region=SA.sf,
                     res=0.25,
                     first_year=2010)

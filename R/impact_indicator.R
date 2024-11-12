@@ -24,7 +24,7 @@
 #'
 #' @examples
 #' taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
-#'  acacia_cube<-taxaFun(taxa=taxa_Acacia,
+#'  acacia_cube<-taxa_cube(taxa=taxa_Acacia,
 #'                       region=SA.sf,
 #'                       res=0.25,
 #'                       first_year=2010)
@@ -292,7 +292,7 @@ impact_indicator<-function(cube,
 #' @examples
 #' 
 #' taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
-#'  acacia_cube<-taxaFun(taxa=taxa_Acacia,
+#'  acacia_cube<-taxa_cube(taxa=taxa_Acacia,
 #'                       region=SA.sf,
 #'                       res=0.25,
 #'                       first_year=2010)
@@ -411,6 +411,25 @@ site_impact<-function(cube,
 
 
 
+# siteImpact%>% 
+#   gather(-c(siteID,X,Y),key="year",value="impact") %>% 
+#   na.omit() %>% 
+#   filter(year>=2021) %>% 
+#   ggplot() +
+#   geom_tile(
+#     aes(x=X,y=Y,fill=impact),color="black")+
+#   geom_sf(data = SA.sf, fill = NA, color = "black", alpha = 0.5)+
+#   scale_fill_gradient(low = "yellow",
+#                       high = "red")+
+#   theme_minimal() +
+#   labs(
+#     title = "impact risk map",
+#     y = "Latitude", x="Longitude"
+#   )+
+#   theme(text=element_text(size=14))+
+#   facet_wrap(~year)
+
+
 
 #' Compute species impact indicator
 #'
@@ -437,7 +456,7 @@ site_impact<-function(cube,
 #' @examples
 #' 
 #' taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
-#'  acacia_cube<-taxaFun(taxa=taxa_Acacia,
+#'  acacia_cube<-taxa_cube(taxa=taxa_Acacia,
 #'                       region=SA.sf,
 #'                       res=0.25,
 #'                       first_year=2010)

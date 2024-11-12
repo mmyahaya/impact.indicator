@@ -23,7 +23,7 @@
 #' coordinates of sites
 #'
 
-taxaFun <- function(taxa,
+taxa_cube <- function(taxa,
                     region,
                     limit=500,
                     country=NULL,
