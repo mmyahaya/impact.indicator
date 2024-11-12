@@ -102,7 +102,7 @@ indicators, namely, ***precautionary***, ***precautionary cumulative***, ***mean
 - ***mean cumulative***: cumulative score across species' mean in each site\
 - ***cumulative***: cumulative score across species' sum of maximum score per mechanism\
 ```{r}
-impact_value<-impact_indicator(cube=acacia_cube$cube,
+site_value<-site_impact(cube=acacia_cube$cube,
                                impact_data = eicat_data,
                                col_category="impact_category",
                                col_species="scientific_name",
@@ -115,7 +115,7 @@ impact_value<-impact_indicator(cube=acacia_cube$cube,
 ```{r}
 #impact risk map
 #visualise last four years for readability
-impact_value$sitedf%>% 
+site_value%>% 
   gather(-c(siteID,X,Y),key="year",value="impact") %>% 
   na.omit() %>% 
   filter(year>=2021) %>% 
@@ -148,7 +148,15 @@ used below.
 ```{r}
 #sum of impact risk map for each year
 
-ggplot(data = impact_value$impact_values) +
+impact_value<-impact_indicator(cube=acacia_cube$cube,
+                              impact_data = eicat_data,
+                              col_category="impact_category",
+                              col_species="scientific_name",
+                              col_mechanism="impact_mechanism",
+                              trans=1,
+                              type = "mean cumulative")
+
+ggplot(data = impact_value) +
   geom_line(aes(y = value, x = year),colour="red",
             stat="identity",
             linewidth=2)+
@@ -166,7 +174,17 @@ ggplot(data = impact_value$impact_values) +
 We compute the impact indicator per species by summing the impact risk map per species and correct for sampling effort by dividing by $N$.
 ```{r}
 #  impact indicator per species
-impact_value$species_values %>%
+
+species_value<-species_impact(cube=acacia_cube$cube,
+                        impact_data = eicat_data,
+                        col_category="impact_category",
+                        col_species="scientific_name",
+                        col_mechanism="impact_mechanism",
+                        trans=1,
+                        type = "mean")
+
+
+species_value %>%
   rownames_to_column("year") %>%
   mutate(year=as.numeric(year)) %>%
   gather(-year,key = "Alien_species", value = "impact_score") %>%
@@ -202,10 +220,9 @@ for(type in types){
                                  col_species="scientific_name",
                                  col_mechanism="impact_mechanism",
                                  trans=1,
-                                 type = type,
-                                 coords=acacia_cube$coords)
+                                 type = type)
   
-  all_impact[type]<-impact_value$impact_values$value
+  all_impact[type]<-impact_value$value
 }
 
 all_impact %>%

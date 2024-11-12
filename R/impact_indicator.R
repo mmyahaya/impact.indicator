@@ -35,8 +35,7 @@
 #'                               col_species="scientific_name",
 #'                                col_mechanism="impact_mechanism",
 #'                               trans=1,
-#'                               type = "mean cumulative",
-#'                               coords=acacia_cube$coords)
+#'                               type = "mean cumulative")
 
 impact_indicator<-function(cube,
                            impact_data = NULL,
@@ -44,8 +43,7 @@ impact_indicator<-function(cube,
                            col_species=NULL,
                            col_mechanism=NULL,
                            trans=1,
-                           type=NULL,
-                           coords=NULL){
+                           type=NULL){
 
 
   full_species_list<-sort(unique(cube$data$scientificName))
@@ -109,12 +107,6 @@ impact_indicator<-function(cube,
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
 
-          siteScore<- siteScore%>%
-            as.data.frame() %>%
-            tibble::rownames_to_column(var = "siteID")
-
-          names(siteScore)[2]<-as.character(y)
-
         } else {
 
           #Precautionary cumulative
@@ -125,18 +117,10 @@ impact_indicator<-function(cube,
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
 
-          siteScore<- siteScore%>%
-            as.data.frame() %>%
-            tibble::rownames_to_column(var = "siteID")
-
-          names(siteScore)[2]<-as.character(y)
-
-
         }
       }
       else { # return NA if no species has impact
-        siteScore<-data.frame("siteID"=NA,"year"=NA)
-        names(siteScore)[2]<-as.character(y)
+
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
       }
@@ -168,12 +152,6 @@ impact_indicator<-function(cube,
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
 
-          siteScore<- siteScore%>%
-            as.data.frame() %>%
-            tibble::rownames_to_column(var = "siteID")
-
-          names(siteScore)[2]<-as.character(y)
-
         } else {
 
           #mean
@@ -183,16 +161,9 @@ impact_indicator<-function(cube,
 
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
-          siteScore<- siteScore%>%
-            as.data.frame() %>%
-            tibble::rownames_to_column(var = "siteID")
-
-          names(siteScore)[2]<-as.character(y)
         }
       }
       else { # return NA is no species has impact
-        siteScore<-data.frame("siteID"=NA,"year"=NA)
-        names(siteScore)[2]<-as.character(y)
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
       }
@@ -223,45 +194,21 @@ impact_indicator<-function(cube,
 
           impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
           impact_values<-rbind(impact_values,c(y,impact))
-          siteScore<- siteScore%>%
-            as.data.frame() %>%
-            tibble::rownames_to_column(var = "siteID")
-
-          names(siteScore)[2]<-as.character(y)
 
         }
       }
       else { # return NA is no species has impact
-        siteScore<-data.frame("siteID"=NA,"year"=NA)
-        names(siteScore)[2]<-as.character(y)
         impact<-NA
         impact_values<-rbind(impact_values,c(y,impact))
       }
 
-
     }
-
-    coords<-left_join(coords,siteScore,by="siteID")
-    # Species impact sport
-    speciesScore<-colSums(impactScore,na.rm = TRUE)/cube$num_cells
-
-    speciesScore%>%
-      as.data.frame() %>%
-      t() %>%
-      as.data.frame()
-
-    species_values<-bind_rows(species_values,speciesScore)
 
   }
 
-  species_values<- species_values%>%
-    select(any_of(impact_species))
-
   impact_values<-as.data.frame(impact_values)
   names(impact_values)<-c("year","value")
-  rownames(species_values)<-as.character(period)
-  return(list("impact_values"=impact_values,"species_values"=species_values,
-              "sitedf"=coords))
+  return(impact_values)
 }
 
 

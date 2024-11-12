@@ -38,8 +38,7 @@ taxa_cube <- function(taxa,
     dplyr::mutate(cellid = dplyr::row_number())
   
   grid_filtered <- grid %>% 
-    sf::st_intersection(region) %>% 
-    suppressMessages() %>% 
+    suppressWarnings(sf::st_intersection(region)) %>% 
     dplyr::select(cellid,geometry)
     
   

@@ -59,20 +59,18 @@ acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                     region=SA.sf,
                     res=0.25,
                     first_year=2010)
-#> Warning: attribute variables are assumed to be spatially constant throughout
-#> all geometries
 
 acacia_cube$cube
 #> 
 #> Simulated data cube for calculating biodiversity indicators
 #> 
 #> Date Range: 2010 - 2024 
-#> Number of cells: 366 
+#> Number of cells: 369 
 #> Grid reference system: custom 
 #> Coordinate range:
 #> [1] "Coordinates not provided"
 #> 
-#> Total number of observations: 5323 
+#> Total number of observations: 5559 
 #> Number of species represented: 25 
 #> Number of families represented: Data not present 
 #> 
@@ -80,7 +78,7 @@ acacia_cube$cube
 #> 
 #> First 10 rows of data (use n = to show more):
 #> 
-#> # A tibble: 5,323 × 6
+#> # A tibble: 5,559 × 6
 #>    scientificName   taxonKey minCoordinateUncertaintyInMe…¹  year cellCode   obs
 #>    <chr>               <dbl>                          <dbl> <dbl>    <int> <dbl>
 #>  1 Acacia implexa    2979232                              1  2010      206     1
@@ -93,7 +91,7 @@ acacia_cube$cube
 #>  8 Acacia saligna    2978552                              1  2011      206     1
 #>  9 Acacia saligna    2978552                             15  2011     1312     1
 #> 10 Acacia mearnsii   2979775                              1  2011      230     1
-#> # ℹ 5,313 more rows
+#> # ℹ 5,549 more rows
 #> # ℹ abbreviated name: ¹​minCoordinateUncertaintyInMeters
 head(acacia_cube$coords)
 #>   siteID        X       Y
@@ -192,7 +190,7 @@ cumulative***, ***mean***, ***mean cumulative*** and ***cumulative***.
   score per mechanism  
 
 ``` r
-impact_value<-impact_indicator(cube=acacia_cube$cube,
+site_value<-site_impact(cube=acacia_cube$cube,
                                impact_data = eicat_data,
                                col_category="impact_category",
                                col_species="scientific_name",
@@ -207,7 +205,7 @@ impact_value<-impact_indicator(cube=acacia_cube$cube,
 ``` r
 #impact risk map
 #visualise last four years for readability
-impact_value$sitedf%>% 
+site_value%>% 
   gather(-c(siteID,X,Y),key="year",value="impact") %>% 
   na.omit() %>% 
   filter(year>=2021) %>% 
@@ -249,7 +247,15 @@ than using `geom_smooth()` used below.
 ``` r
 #sum of impact risk map for each year
 
-ggplot(data = impact_value$impact_values) +
+impact_value<-impact_indicator(cube=acacia_cube$cube,
+                              impact_data = eicat_data,
+                              col_category="impact_category",
+                              col_species="scientific_name",
+                              col_mechanism="impact_mechanism",
+                              trans=1,
+                              type = "mean cumulative")
+
+ggplot(data = impact_value) +
   geom_line(aes(y = value, x = year),colour="red",
             stat="identity",
             linewidth=2)+
@@ -272,7 +278,17 @@ map per species and correct for sampling effort by dividing by $N$.
 
 ``` r
 #  impact indicator per species
-impact_value$species_values %>%
+
+species_value<-species_impact(cube=acacia_cube$cube,
+                        impact_data = eicat_data,
+                        col_category="impact_category",
+                        col_species="scientific_name",
+                        col_mechanism="impact_mechanism",
+                        trans=1,
+                        type = "mean")
+
+
+species_value %>%
   rownames_to_column("year") %>%
   mutate(year=as.numeric(year)) %>%
   gather(-year,key = "Alien_species", value = "impact_score") %>%
@@ -311,10 +327,9 @@ for(type in types){
                                  col_species="scientific_name",
                                  col_mechanism="impact_mechanism",
                                  trans=1,
-                                 type = type,
-                                 coords=acacia_cube$coords)
+                                 type = type)
   
-  all_impact[type]<-impact_value$impact_values$value
+  all_impact[type]<-impact_value$value
 }
 
 all_impact %>%
