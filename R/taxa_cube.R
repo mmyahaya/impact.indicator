@@ -1,23 +1,26 @@
 #' @title Prepare Data Cubes
 #'
-#' @description Prepare data cube to calculate species impact . The function `taxa_cube`
-#' can take in the scientific name of the taxa of interest as in character or
-#' GBIF occurrences data containing necessary columns. The GBIF occurrences is
-#' downloaded if scientific names is given.
+#' @description Prepare data cube to calculate species impact . 
+#' The function `taxa_cube` can take in the scientific name of the 
+#' taxa of interest as in character or GBIF occurrences data containing
+#' necessary columns. The GBIF occurrences is downloaded if scientific
+#' names is given.
+#'
 #' @param taxa Character or dataframe. The character should be the scientific
 #' name of the focal taxa while the dataframe is the GBIF occurrences data which must
 #' contain "decimalLatitude","decimalLongitude","species","speciesKey",
 #' "coordinateUncertaintyInMeters","dateIdentified", and "year".
-#' @param region sf object. The shapefile of the region of study
-#' @param limit Integer. Number of records to return from GBIF download.
+#' @param region The shapefile of the region of study
+#' @param limit Number of records to return from GBIF download.
 #' Default is set to 500
-
-#' @param country Character. Country for which the GBIP occurrences data should
-#' be downloaded. Country should be 2-letter country code (ISO-3166-1).
-#' Default is ZA
-#' @param res Numeric. The resolution of grid cells to be used. Default is 0.25
-#' @param first_year Numeric. The year from which the occurrence should start from
-#' @return A list containing the `sim_cubes` of taxa and dataframe of site coordinates
+#'
+#' @param country Two-letter country code (ISO-3166-1) of Country for which 
+#' the GBIP occurrences data should be downloaded. 
+#' @param res The resolution of grid cells to be used. Default is 0.25
+#' @param first_year The year from which the occurrence should start from
+#'
+#' @return A list containing the `sim_cubes` of taxa and the dataframe of
+#' coordinates of sites
 #'
 
 taxaFun <- function(taxa,
@@ -25,7 +28,7 @@ taxaFun <- function(taxa,
                     limit=500,
                     country=NULL,
                     res=0.25,
-                    first_year=NULL,...){
+                    first_year=NULL){
 
   grid <- region %>%
     sf::st_make_grid(cellsize = c(res,res),
