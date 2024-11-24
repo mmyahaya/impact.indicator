@@ -17,59 +17,56 @@ sbs.fun<-function(y){
 
 my_boot_statistic <- function(data, indices, fun) {
   d <- data[indices]
-  y<-indices
-  return(fun(d,y))
+  #y<-indices
+  return(fun(d))
 }
 
-my_fun<-function(x,y){
+my_fun<-function(x){
 
   species_list<-colnames(x)
+  sbs.taxon<-x
 
-  if(!exists("taxon_status_list")){
-    full_species_list<-sort(unique(taxa_cube$data$scientificName))
-    taxon_status_list<-taxon_status(species_list = full_species_list,
-                                    source = "WCVP",
-                                    region = "South Africa")
-  }
-
-
-
-  intro.sf<-taxa_cube$data %>%
-    filter(year==period[-c(1:12)][y]) %>%
-    left_join(taxa_list_status,
-              by = c("scientificName" = "taxon"))
-
-
-  status.sf <- intro.sf %>%
-    group_by(cellCode) %>%
-    summarise(
-      total_intro_obs = sum(obs[introduction_status == "introduced"], na.rm = TRUE),
-      total_native_obs = sum(obs[introduction_status == "native"], na.rm = TRUE),
-      .groups = "drop"
-    ) %>%
-    mutate(across(c(total_intro_obs, total_native_obs), ~ ifelse(.==0,NA,.))) %>%
-    mutate(intro_native=total_intro_obs/total_native_obs) %>%
-    arrange(cellCode)
   if (!exists("eicat_score_list")){
-    full_species_list<-sort(unique(taxa_cube$data$scientificName))
-    eicat_score_list=eicat_impact(eicat_data = eicat_data,species_list = full_species_list,
-                                  fun="max")
+    eicat_score_list=impact_cat(impact_data = impact_data,
+                                species_list = species_list,
+                                col_category="impact_category",
+                                col_species="scientific_name",
+                                col_mechanism="impact_mechanism",
+                                trans = 1)
+  
   }
+  
 
-  eicat_score<-eicat_score_list[species_list,]
+  eicat_score<-eicat_score_list[species_list,"max"]
+  
+  #impact score multiply by species by site
+  impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
+  
+  # Remove rows with all NAs
+  impactScore_clean <- impactScore[rowSums(is.na(impactScore)) !=
+                                     ncol(impactScore)
+                                   , ]
+  
+  # Remove columns with all NAs
+  if(length(impactScore_clean)!=0){
+    impactScore_clean <- impactScore_clean[,
+                                           colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
+    
+  }
+  
+  siteScore<-apply(impactScore_clean,1, function(x) max(x,
+                                                        na.rm = TRUE))
+  
+  impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
 
-  siteScore<-status.sf$intro_native
-  abdundance_impact = sweep(as.matrix(x),2,eicat_score,FUN = "*")
-  impactScore = siteScore*abdundance_impact
-  impact<-sum(impactScore,na.rm = TRUE)
-
-
-  return(indices)
+  return(impact)
 }
 
 fun=my_fun
 samples<-10
-bootstrap_list <- map(period[-c(1:12)],sbs.fun) %>%
+
+period<-acacia_cube$cube$data$year %>% unique()
+bootstrap_list <- map(period,sbs.fun) %>%
   # Perform bootstrapping
   purrr::map(~boot::boot(
     data = .,
@@ -78,5 +75,4 @@ bootstrap_list <- map(period[-c(1:12)],sbs.fun) %>%
     fun = fun))
 bootstrap_list
 
-sweep(as.matrix(sbs.taxon_list[[2]]), 2, NA, FUN = "*")
 
