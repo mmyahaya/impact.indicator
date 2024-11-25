@@ -104,7 +104,3 @@ taxa_cube <- function(taxa,
   return(list("cube"=taxa_cube,"coords"=coords))
 }
 
-
-
-
-
