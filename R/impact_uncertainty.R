@@ -1,3 +1,16 @@
+
+taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
+
+
+countries_sf<-readRDS("Data/countries_shapefile.rds")
+SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
+acacia_cube<-taxa_cube(taxa=taxa_Acacia,
+                       region=SA.sf,
+                       res=0.25,
+                       first_year=2015)
+eicat_data<-readRDS("Data/eicat_data.rds")
+
+
 sbs.fun<-function(y){
   sbs.taxon<-taxa_cube$data %>%
     filter(year==y) %>%
@@ -6,7 +19,7 @@ sbs.fun<-function(y){
     summarise(across(obs, sum), .groups = "drop") %>%
     pivot_wider(names_from = scientificName, values_from = obs) %>%
     arrange(cellCode) %>%
-    column_to_rownames(var = "cellCode")  #%>%
+    column_to_rownames(var = "cellCode")  
   sbs.taxon<-as.matrix(sbs.taxon)
   return(sbs.taxon)
 }
@@ -58,6 +71,11 @@ my_fun<-function(x){
 
   return(impact)
 }
+
+
+
+
+
 
 fun=my_fun
 samples<-500
