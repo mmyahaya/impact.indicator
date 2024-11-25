@@ -7,24 +7,21 @@ sbs.fun<-function(y){
     pivot_wider(names_from = scientificName, values_from = obs) %>%
     arrange(cellCode) %>%
     column_to_rownames(var = "cellCode")  #%>%
-  #mutate(across(all_of(everything()), ~ ifelse(is.na(.),0,.)))
-
-  #colnames(sbs.taxon)<-NULL
   sbs.taxon<-as.matrix(sbs.taxon)
   return(sbs.taxon)
 }
 
 
 my_boot_statistic <- function(data, indices, fun) {
-  d <- data[indices]
-  #y<-indices
+  d <- data[indices,]
   return(fun(d))
 }
 
 my_fun<-function(x){
 
-  species_list<-colnames(x)
   sbs.taxon<-x
+  
+  species_list<-colnames(sbs.taxon)
 
   if (!exists("eicat_score_list")){
     eicat_score_list=impact_cat(impact_data = impact_data,
@@ -38,7 +35,7 @@ my_fun<-function(x){
   
 
   eicat_score<-eicat_score_list[species_list,"max"]
-  
+
   #impact score multiply by species by site
   impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
   
@@ -54,7 +51,7 @@ my_fun<-function(x){
     
   }
   
-  siteScore<-apply(impactScore_clean,1, function(x) max(x,
+  siteScore<-apply(impactScore_clean,1, function(x) sum(x,
                                                         na.rm = TRUE))
   
   impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
@@ -63,7 +60,7 @@ my_fun<-function(x){
 }
 
 fun=my_fun
-samples<-10
+samples<-500
 
 period<-acacia_cube$cube$data$year %>% unique()
 bootstrap_list <- map(period,sbs.fun) %>%
