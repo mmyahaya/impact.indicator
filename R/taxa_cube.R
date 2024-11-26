@@ -1,7 +1,7 @@
 #' @title Prepare Data Cubes
 #'
-#' @description Prepare data cube to calculate species impact . 
-#' The function `taxa_cube` can take in the scientific name of the 
+#' @description Prepare data cube to calculate species impact .
+#' The function `taxa_cube` can take in the scientific name of the
 #' taxa of interest as in character or GBIF occurrences data containing
 #' necessary columns. The GBIF occurrences is downloaded if scientific
 #' names is given.
@@ -14,8 +14,8 @@
 #' @param limit Number of records to return from GBIF download.
 #' Default is set to 500
 #'
-#' @param country Two-letter country code (ISO-3166-1) of Country for which 
-#' the GBIP occurrences data should be downloaded. 
+#' @param country Two-letter country code (ISO-3166-1) of Country for which
+#' the GBIP occurrences data should be downloaded.
 #' @param res The resolution of grid cells to be used. Default is 0.25
 #' @param first_year The year from which the occurrence should start from
 #'
@@ -30,35 +30,40 @@ taxa_cube <- function(taxa,
                     res=0.25,
                     first_year=NULL){
 
+  if(!is.null(first_year)){
+    assertthat::assert_that(assertthat::is.number(first_year),
+                            msg ="`first_year` must be a number if provided" )
+  }
+
   grid <- region %>%
     sf::st_make_grid(cellsize = c(res,res),
                      offset = c(sf::st_bbox(region)$xmin,
                                 sf::st_bbox(region)$ymin)) %>%
     sf::st_sf() %>%
     dplyr::mutate(cellid = dplyr::row_number())
-  
-  grid_filtered <- grid %>% 
-    suppressWarnings(sf::st_intersection(region)) %>% 
+
+  grid_filtered <- grid %>%
+    suppressWarnings(sf::st_intersection(region)) %>%
     dplyr::select(cellid,geometry)
-    
-  
+
+
   # get coordinates of the occurrence sites
-  coords <- sf::st_coordinates(sf::st_centroid(grid)) %>% 
-    as.data.frame() %>% 
-    tibble::rownames_to_column(var = "siteID") %>% 
+  coords <- sf::st_coordinates(sf::st_centroid(grid)) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "siteID") %>%
     suppressWarnings()
 
   # download taxaif the scientific name is given as character
   if("character" %in% class(taxa)){
-    taxa.gbif_download = rgbif::occ_data(scientificName=taxa, 
+    taxa.gbif_download = rgbif::occ_data(scientificName=taxa,
                                          country=country,
                                          hasCoordinate=TRUE,
                                          hasGeospatialIssue=FALSE,
                                          limit = limit)
     #extract data from the downloaded file
-    taxa.df = as.data.frame(taxa.gbif_download$data) 
+    taxa.df = as.data.frame(taxa.gbif_download$data)
     #check if data fame contains the required columns
-  } else if("data.frame" %in% class(taxa)){ 
+  } else if("data.frame" %in% class(taxa)){
     if(any(!c("decimalLatitude","decimalLongitude",
               "species","speciesKey","coordinateUncertaintyInMeters",
               "year") %in% colnames(taxa))){
