@@ -2,7 +2,7 @@ Code to calculate the impact indicator
 ================
 Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi, Cang
 Hui
-2024-11-12
+2024-11-29
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
