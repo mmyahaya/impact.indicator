@@ -18,33 +18,38 @@
 #' the GBIP occurrences data should be downloaded.
 #' @param res The resolution of grid cells to be used. Default is 0.25
 #' @param first_year The year from which the occurrence should start from
+#' @param last_year The year at which the occurrence should end
 #'
 #' @return A list containing the `sim_cubes` of taxa and the dataframe of
 #' coordinates of sites
 #'
 
 taxa_cube <- function(taxa,
-                    region,
-                    limit=500,
-                    country=NULL,
-                    res=0.25,
-                    first_year=NULL){
-
-  if(!is.null(first_year)){
-    assertthat::assert_that(assertthat::is.number(first_year),
-                            msg ="`first_year` must be a number if provided" )
+                      region,
+                      limit = 500,
+                      country = NULL,
+                      res = 0.25,
+                      first_year = NULL,
+                      last_year = NULL) {
+  # check if first_year is a number if provided
+  if (!is.null(first_year) & !assertthat::is.number(first_year)) {
+    cli::cli_abort(c("{.var first_year} must be a number if provided"))
   }
 
   grid <- region %>%
-    sf::st_make_grid(cellsize = c(res,res),
-                     offset = c(sf::st_bbox(region)$xmin,
-                                sf::st_bbox(region)$ymin)) %>%
+    sf::st_make_grid(
+      cellsize = c(res, res),
+      offset = c(
+        sf::st_bbox(region)$xmin,
+        sf::st_bbox(region)$ymin
+      )
+    ) %>%
     sf::st_sf() %>%
     dplyr::mutate(cellid = dplyr::row_number())
 
   grid_filtered <- grid %>%
     suppressWarnings(sf::st_intersection(region)) %>%
-    dplyr::select(cellid,geometry)
+    dplyr::select(cellid, geometry)
 
 
   # get coordinates of the occurrence sites
@@ -54,58 +59,111 @@ taxa_cube <- function(taxa,
     suppressWarnings()
 
   # download taxaif the scientific name is given as character
-  if("character" %in% class(taxa)){
-    taxa.gbif_download = rgbif::occ_data(scientificName=taxa,
-                                         country=country,
-                                         hasCoordinate=TRUE,
-                                         hasGeospatialIssue=FALSE,
-                                         limit = limit)
-    #extract data from the downloaded file
-    taxa.df = as.data.frame(taxa.gbif_download$data)
-    #check if data fame contains the required columns
-  } else if("data.frame" %in% class(taxa)){
-    if(any(!c("decimalLatitude","decimalLongitude",
-              "species","speciesKey","coordinateUncertaintyInMeters",
-              "year") %in% colnames(taxa))){
-      requiredcol<-c("decimalLatitude","decimalLongitude","species",
-                     "speciesKey","coordinateUncertaintyInMeters",
-                     "year")
-      missingcol<-requiredcol[!c("decimalLatitude","decimalLongitude","species",
-                                 "speciesKey","coordinateUncertaintyInMeters",
-                                 "year") %in% colnames(taxa)]
-      cli::cli_abort(c("{missingcol} is/are not in the {.var taxa} column ",
-                       "x" = "{.var taxa} should be a data of GBIF format "))
+  if (assertthat::is.string(taxa)) {
+    taxa.gbif_download <- rgbif::occ_data(
+      scientificName = taxa,
+      country = country,
+      hasCoordinate = TRUE,
+      hasGeospatialIssue = FALSE,
+      limit = limit
+    )
+    # extract data from the downloaded file
+    taxa.df <- as.data.frame(taxa.gbif_download$data)
+
+    # stop if no download from GBIF
+    if (length(taxa.df) == 0) {
+      cli::cli_abort(c(
+        "No download from GBIF",
+        "i" = "Check the {.var taxa} spelling"
+      ))
+    }
+
+
+
+    # check if data fame contains the required columns
+  } else if ("data.frame" %in% class(taxa)) {
+    if (any(!c(
+      "decimalLatitude", "decimalLongitude",
+      "species", "speciesKey", "coordinateUncertaintyInMeters",
+      "year"
+    ) %in% colnames(taxa))) {
+      requiredcol <- c(
+        "decimalLatitude", "decimalLongitude", "species",
+        "speciesKey", "coordinateUncertaintyInMeters",
+        "year"
+      )
+      missingcol <- requiredcol[!c(
+        "decimalLatitude", "decimalLongitude", "species",
+        "speciesKey", "coordinateUncertaintyInMeters",
+        "year"
+      ) %in% colnames(taxa)]
+      cli::cli_abort(c("{.var {missingcol}} {?is/are} not in the {.var taxa} column ",
+        "x" = "{.var taxa} should be a data of GBIF format "
+      ))
     }
     # take taxa data frame if accurate
-    taxa.df<-taxa
+    taxa.df <- taxa
   } else { # stop and report if taxa is not a scientific name or dataframe
     cli::cli_abort(c("{.var taxa} is not a character or dataframe"))
   }
 
 
-  taxa.sf = taxa.df %>%
-    dplyr::select(decimalLatitude,decimalLongitude,
-                  species,speciesKey,
-                  coordinateUncertaintyInMeters,year) %>% #select occurrence data
+  taxa.sf <- taxa.df %>%
+    dplyr::select(
+      decimalLatitude, decimalLongitude,
+      species, speciesKey,
+      coordinateUncertaintyInMeters, year
+    ) %>% # select occurrence data
     dplyr::filter_all(all_vars(!is.na(.))) %>% # remove rows with missing data
-    dplyr::filter(coordinateUncertaintyInMeters<=res*1000) %>%
-    sf::st_as_sf(coords = c("decimalLongitude", "decimalLatitude"),
-                 crs = 4326) %>%
+    dplyr::filter(coordinateUncertaintyInMeters <= res * 1000) %>%
+    sf::st_as_sf(
+      coords = c("decimalLongitude", "decimalLatitude"),
+      crs = 4326
+    ) %>%
     sf::st_join(grid_filtered) %>%
     as.data.frame() %>%
     dplyr::select(-geometry) %>%
-    dplyr::mutate(occurrences=1)
+    dplyr::mutate(occurrences = 1)
 
 
-  taxa_cube<-b3gbi::process_cube(taxa.sf,grid_type = "custom",
-                                 cols_cellCode = "cellid",
-                                 cols_year = "year",
-                                 cols_occurrences = "occurrences",
-                                 cols_species = "species",
-                                 cols_speciesKey = "speciesKey",
-      cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters",
-      first_year = first_year)
+  taxa_cube <- b3gbi::process_cube(taxa.sf,
+    grid_type = "custom",
+    cols_cellCode = "cellid",
+    cols_year = "year",
+    cols_occurrences = "occurrences",
+    cols_species = "species",
+    cols_speciesKey = "speciesKey",
+    cols_minCoordinateUncertaintyInMeters = "coordinateUncertaintyInMeters",
+    first_year = first_year,
+    last_year = last_year
+  )
 
-  return(list("cube"=taxa_cube,"coords"=coords))
+  return(list("cube" = taxa_cube, "coords" = coords))
 }
 
+
+# countries_sf<-readRDS("Data/countries_shapefile.rds")
+# SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
+#
+#
+#
+# taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
+# acacia_cube<-taxa_cube(taxa="ac",
+#                        region=SA.sf,
+#                        res=0.25,
+#                        first_year = 2010,
+#                        last_year = 2012
+#
+#
+# )
+#
+# taxa_test<- taxa_test %>% select(-decimalLatitude)
+#
+#
+# taxa.gbif_download = rgbif::occ_data(scientificName="tax",
+#                                      country=NULL,
+#                                      hasCoordinate=TRUE,
+#                                      hasGeospatialIssue=FALSE,
+#                                      limit = 500)
+# #extract data from the downloaded file
+# taxa.df = as.data.frame(taxa.gbif_download$data)
