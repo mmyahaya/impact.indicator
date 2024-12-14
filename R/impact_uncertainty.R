@@ -1,18 +1,17 @@
-
+library(tidyverse)
 taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
 
 
 countries_sf<-readRDS("Data/countries_shapefile.rds")
-SA.sf<-filter(countries_sf,name=="South Africa") %>% select(name,geometry)
+SA.sf<-dplyr::filter(countries_sf,name=="South Africa") %>% select(name,geometry)
 acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                        region=SA.sf,
                        res=0.25,
                        first_year=2015)
 impact_data<-readRDS("Data/eicat_data.rds")
 
-cube<-acacia_cube$cube
 sbs.fun<-function(y){
-  sbs.taxon<-cube$data %>%
+  sbs.taxon <- data_cube_df %>%
     filter(year==y) %>%
     dplyr::select(scientificName,cellCode,obs) %>%
     group_by(scientificName,cellCode) %>%
@@ -20,14 +19,7 @@ sbs.fun<-function(y){
     pivot_wider(names_from = scientificName, values_from = obs) %>%
     arrange(cellCode) %>%
     column_to_rownames(var = "cellCode")
-  sbs.taxon<-as.matrix(sbs.taxon)
   return(sbs.taxon)
-}
-
-
-boot_statistic <- function(data, indices, fun) {
-  d <- data[indices,]
-  return(fun(d))
 }
 
 boot_fun<-function(x){
@@ -47,10 +39,10 @@ boot_fun<-function(x){
   }
 
 
-  eicat_score<-eicat_score_list[species_list,"max"]
+  eicat_score <- eicat_score_list[species_list,"max"]
 
   #impact score multiply by species by site
-  impactScore = sweep(sbs.taxon,2,eicat_score,FUN = "*")
+  impactScore <- sweep(sbs.taxon,2,eicat_score,FUN = "*")
 
   # Remove rows with all NAs
   impactScore_clean <- impactScore[rowSums(is.na(impactScore)) !=
@@ -66,32 +58,13 @@ boot_fun<-function(x){
 
   siteScore<-apply(impactScore_clean,1, function(x) sum(x,
                                                         na.rm = TRUE))
+  
+  num_cells <- length(unique(data_cube_df$cellCode))
 
-  impact<-sum(siteScore,na.rm = TRUE)/cube$num_cells
+  impact<-sum(siteScore,na.rm = TRUE)/num_cells
 
   return(impact)
 }
-
-
-
-
-
-
-fun=boot_fun
-samples<-100
-
-period<-acacia_cube$cube$data$year %>% unique()
-bootstrap_list <- purrr::map(period,sbs.fun) %>%
-  # Perform bootstrapping
-  purrr::map(~boot::boot(
-    data = .,
-    statistic = boot_statistic,
-    R = samples,
-    fun = fun))
-bootstrap_list
-
-
-
 
 #' Perform bootstrapping for a calculated statistic over time
 #'
@@ -141,6 +114,7 @@ perform_bootstrap_ts <- function(
     }
     set.seed(seed)
   }
+  
   
   
   if (is.na(ref_group)) {
@@ -193,144 +167,24 @@ perform_bootstrap_ts <- function(
 }
 A<-perform_bootstrap_ts(data_cube_df =  acacia_cube$cube$data,
                         fun = boot_fun,
-                        ref_group = NA,
+                        ref_group = 2019,
+                        samples = 100,
                         seed = 123)
 
-
-
-#' Calculate confidence intervals for list of `boot` objects
-#'
-#' This function calculates confidence intervals for a list of objects of class
-#' `"boot"` per year into a dataframe containing all required summaries.
-#'
-#' @param bootstrap_samples_df A dataframe containing the bootstrap samples.
-#' @param grouping_var ...
-#' @param type A vector of character strings representing the type of intervals
-#' required. The value should be any subset of the values `c("perc", "bca")` or
-#' simply `"all"` (default) which will compute both types of intervals.
-#' @param conf A scalar or vector containing the confidence level(s) of the
-#' required interval(s). Default 0.95.
-#' @param aggregate ...
-#'
-#' @returns The returned value is a dataframe containing the time point,
-#' the type of interval (`int_type`), the lower limit of the confidence
-#' interval (`ll`), the upper limit of the confidence interval (`ul`), and the
-#' confidence level of the intervals (`conf_level`).
-
-get_bootstrap_ci <- function(
-    bootstrap_samples_df,
-    grouping_var,
-    type = c("perc", "bca"),
-    conf = 0.95,
-    aggregate = TRUE) {
-  require("dplyr")
-  require("rlang")
+# Resize A to match the number of rows in B
+resize <- function(A, n) {
+  if (nrow(A) > n) {
+    # Truncate A if it has more rows
+    A %>% 
+      slice(1:n) 
   
-  # Check if crossv_method is loo or kfold
-  type <- tryCatch({
-    match.arg(type, c("perc", "bca"))
-  }, error = function(e) {
-    stop("`type` must be one of 'perc', 'bca'.",
-         call. = FALSE)
-  })
+  } else if (nrow(A) < n) {
+    # Expand A if it has fewer rows
+    A %>%
+      bind_rows(tibble(id = NA, value = NA) %>% slice(rep(1, n - nrow(A))))
   
-  alpha <- (1 - conf) / 2
-  
-  if (type == "perc") {
-    conf_df <- bootstrap_samples_df %>%
-      mutate(
-        int_type = type,
-        ll = stats::quantile(.data$rep_boot, probs = alpha),
-        ul = stats::quantile(.data$rep_boot, probs = 1 - alpha),
-        conf_level = conf,
-        .by = all_of(grouping_var))
   } else {
-    stop("bca not implemented yet")
+    # If already the same size, return A as is
+    A
   }
-  
-  if (aggregate) {
-    conf_df_out <- conf_df %>%
-      select(-c("sample", "rep_boot")) %>%
-      distinct()
-  } else {
-    conf_df_out <- conf_df
-  }
-  
-  return(conf_df_out)
 }
-
-
-#' Calculate confidence intervals for list of `boot` objects
-#'
-#' This function calculates confidence intervals for a list of objects of class
-#' `"boot"` per year into a dataframe containing all required summaries.
-#'
-#' @param bootstrap_list A list of objects of class `"boot"` per year.
-#' @param ... Additional argument to be passed to the `boot::boot.ci()`
-#' function.
-#' @param temporal_list_name The temporal list names of `bootstrap_list`
-#' (e.g., year, month ...) containing time point values. Default `year`.
-#'
-#' @returns The returned value is a dataframe containing the time point,
-#' the type of interval (`int_type`), the lower limit of the confidence
-#' interval (`ll`), the upper limit of the confidence interval (`ul`), and the
-#' confidence level of the intervals (`conf_level`).
-
-get_bootstrap_ci_old <- function(
-    bootstrap_list,
-    ...,
-    temporal_list_name = "year") {
-  require("dplyr")
-  require("rlang")
-  
-  # Calculate nonparametric confidence intervals
-  conf_ints <- lapply(bootstrap_list, boot::boot.ci, ...)
-  
-  # Remove null values
-  conf_ints[sapply(conf_ints, is.null)] <- NULL
-  
-  # Exit if there are no values
-  if (length(conf_ints) == 0) {
-    return(conf_ints)
-  }
-  
-  # Get interval names
-  indices_to_remove <- match(c("R", "t0", "call"), names(conf_ints[[1]]))
-  interval_types <- names(conf_ints[[1]])[-indices_to_remove]
-  
-  # Get confidence level
-  conf_level <- conf_ints[[1]][[interval_types[1]]][1]
-  
-  # Summarise for each confidence interval upper and lower limits in dataframes
-  out_list <- vector(mode = "list", length = length(interval_types))
-  for (i in seq_along(interval_types)) {
-    type <- interval_types[i]
-    
-    ll <- sapply(conf_ints, function(list) {
-      vec <- list[[type]]
-      vec[length(vec) - 1]
-    })
-    ul <- sapply(conf_ints, function(list) {
-      vec <- list[[type]]
-      vec[length(vec)]
-    })
-    
-    out_list[[i]] <- data.frame(time_point = as.numeric(names(conf_ints)),
-                                int_type = type,
-                                ll = ll,
-                                ul = ul)
-  }
-  
-  # Create combined dataframe
-  conf_df_out <- do.call(rbind.data.frame, out_list) %>%
-    tidyr::complete("time_point" = as.numeric(names(bootstrap_list)),
-                    .data$int_type) %>%
-    dplyr::arrange(.data$time_point, .data$int_type) %>%
-    dplyr::mutate(conf_level = conf_level) %>%
-    dplyr::rename({{ temporal_list_name }} := "time_point")
-  rownames(conf_df_out) <- NULL
-  
-  return(conf_df_out)
-}
-get_bootstrap_ci_old(A)
-
