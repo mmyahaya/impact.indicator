@@ -1,4 +1,8 @@
-library(tidyverse)
+library(dplyr)
+
+source("R/impact_cat.R")
+source("R/taxa_cube.R")
+
 taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
 
 
@@ -9,6 +13,8 @@ acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                        res=0.25,
                        first_year=2015)
 impact_data<-readRDS("Data/eicat_data.rds")
+
+data_cube_df =  acacia_cube$cube$data
 
 sbs.fun<-function(y){
   sbs.taxon <- data_cube_df %>%
@@ -21,6 +27,24 @@ sbs.fun<-function(y){
     column_to_rownames(var = "cellCode")
   return(sbs.taxon)
 }
+
+
+# Resize a data frame to the size of another
+resize <- function(A, n) {
+  if (nrow(A) > n) {
+    A %>% 
+      slice(1:n) 
+    
+  } else if (nrow(A) < n) {
+    A %>%
+      bind_rows(tibble(id = NA, value = NA) %>% slice(rep(1, n - nrow(A))))
+    
+  } else {
+
+    A
+  }
+}
+
 
 boot_fun<-function(x){
 
@@ -167,24 +191,6 @@ perform_bootstrap_ts <- function(
 }
 A<-perform_bootstrap_ts(data_cube_df =  acacia_cube$cube$data,
                         fun = boot_fun,
-                        ref_group = 2019,
+                        ref_group = NA,
                         samples = 100,
                         seed = 123)
-
-# Resize A to match the number of rows in B
-resize <- function(A, n) {
-  if (nrow(A) > n) {
-    # Truncate A if it has more rows
-    A %>% 
-      slice(1:n) 
-  
-  } else if (nrow(A) < n) {
-    # Expand A if it has fewer rows
-    A %>%
-      bind_rows(tibble(id = NA, value = NA) %>% slice(rep(1, n - nrow(A))))
-  
-  } else {
-    # If already the same size, return A as is
-    A
-  }
-}
