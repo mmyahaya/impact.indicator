@@ -1,4 +1,5 @@
 library(dplyr)
+library(sf)
 
 source("R/impact_cat.R")
 source("R/taxa_cube.R")
@@ -18,13 +19,14 @@ data_cube_df =  acacia_cube$cube$data
 
 sbs.fun<-function(y){
   sbs.taxon <- data_cube_df %>%
-    filter(year==y) %>%
-    dplyr::select(scientificName,cellCode,obs) %>%
-    group_by(scientificName,cellCode) %>%
-    summarise(across(obs, sum), .groups = "drop") %>%
-    pivot_wider(names_from = scientificName, values_from = obs) %>%
-    arrange(cellCode) %>%
-    column_to_rownames(var = "cellCode")
+    dplyr::filter(year == y) %>%
+    dplyr::mutate(obs=1) %>%
+    dplyr::select(scientificName, cellCode, obs) %>%
+    # remove duplicates of a species per site
+    dplyr::distinct(scientificName, cellCode, .keep_all = TRUE) %>%
+    tidyr::pivot_wider(names_from = scientificName, values_from = obs) %>%
+    dplyr::arrange(cellCode) %>%
+    tibble::column_to_rownames(var = "cellCode")
   return(sbs.taxon)
 }
 
@@ -68,19 +70,9 @@ boot_fun<-function(x){
   #impact score multiply by species by site
   impactScore <- sweep(sbs.taxon,2,eicat_score,FUN = "*")
 
-  # Remove rows with all NAs
-  impactScore_clean <- impactScore[rowSums(is.na(impactScore)) !=
-                                     ncol(impactScore)
-                                   , ]
 
-  # Remove columns with all NAs
-  if(length(impactScore_clean)!=0){
-    impactScore_clean <- impactScore_clean[,
-           colSums(is.na(impactScore_clean)) != nrow(impactScore_clean)]
 
-  }
-
-  siteScore<-apply(impactScore_clean,1, function(x) sum(x,
+  siteScore<-apply(impactScore,1, function(x) sum(x,
                                                         na.rm = TRUE))
   
   num_cells <- length(unique(data_cube_df$cellCode))
@@ -139,7 +131,7 @@ perform_bootstrap_ts <- function(
     set.seed(seed)
   }
   
-  
+
   
   if (is.na(ref_group)) {
     # Define bootstrapping for a calculated statistic
@@ -160,14 +152,25 @@ perform_bootstrap_ts <- function(
           R = samples,
           fun = fun)
       })
+    
+    names(bootstrap_list) <- period
   } else {
     # Define bootstrapping for a difference in a calculated statistic
     boot_statistic_diff <- function(data, ref_data, indices, fun) {
-      stat <- fun(data[indices,])
-      ref_data <- resize(ref_data,nrow(data))
-      ref_stat <- fun(ref_data[indices,])
       
-      return(stat - ref_stat)
+      if(is.vector(data)){
+        stat <- fun(data[indices])
+        ref_stat <- fun(ref_data[indices])
+        
+        return(stat - ref_stat)
+      } else{
+        stat <- fun(data[indices,])
+        ref_data <- resize(ref_data,nrow(data))
+        ref_stat <- fun(ref_data[indices,])
+        
+        return(stat - ref_stat)
+      }
+      
     }
     
     
@@ -186,11 +189,71 @@ perform_bootstrap_ts <- function(
           ref_data = sum_data_list[[as.character(ref_group)]])
       })
   }
-  
+  #names(bootstrap_list) <- period
   return(bootstrap_list)
 }
-A<-perform_bootstrap_ts(data_cube_df =  acacia_cube$cube$data,
+B<-perform_bootstrap_ts(data_cube_df =  acacia_cube$cube$data,
                         fun = boot_fun,
                         ref_group = NA,
                         samples = 100,
                         seed = 123)
+
+
+#' Convert list of `boot` objects to dataframe
+#'
+#' This function converts a list of objects of class `"boot"` per time point
+#' into a dataframe containing all required summaries.
+#'
+#' @param bootstrap_list A list of objects of class `"boot"` per time point.
+#' @param temporal_list_name The temporal list names of `bootstrap_list`
+#' (e.g., year, month ...) containing time point values. Default `year`.
+#'
+#' @returns The returned value is a dataframe containing the bootstrap sample
+#' index (`sample`), the time point column (e.g. `year`), the bootstrap estimate
+#' of the statistic (`est_boot`), the original sample estimate of the statistic
+#' (`est_original`), the standard deviation of the bootstrap replications
+#' (`se_boot`), and the bootstrap bias (`bias_boot`).
+
+bootstrap_list_to_df <- function(bootstrap_list, temporal_list_name = "year") {
+  require("dplyr")
+  require("rlang")
+  
+  bootstrap_data_df <- sapply(bootstrap_list, function(df) df$t) %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "sample") %>%
+    tidyr::pivot_longer(cols = -sample,
+                        values_to = "est_boot",
+                        names_to = temporal_list_name) %>%
+    dplyr::mutate(sample = as.numeric(sample))
+  
+  bootstrap_summaries <- data.frame(
+    temp_col = names(bootstrap_list),
+    est_original = sapply(bootstrap_list, function(df) df$t0),
+    se_boot = sapply(bootstrap_list, function(df) stats::sd(df$t))
+  )
+  
+  bootstrap_data_full <- bootstrap_data_df %>%
+    dplyr::full_join(
+      bootstrap_summaries,
+      by = dplyr::join_by(!!temporal_list_name == "temp_col")
+    ) %>%
+    dplyr::arrange(.data$sample, .data[[temporal_list_name]]) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(
+      diff = .data$est_boot - .data$est_original,
+      {{ temporal_list_name }} := as.numeric(.data[[temporal_list_name]])) %>%
+    dplyr::group_by(.data[[temporal_list_name]]) %>%
+    dplyr::mutate(bias_boot = mean(.data$diff)) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-"diff")
+  
+  return(bootstrap_data_full)
+}
+
+
+
+bootstrap_list_to_df(A)
+
+
+
+
