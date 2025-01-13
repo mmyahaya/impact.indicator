@@ -15,6 +15,16 @@ acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                        first_year=2015)
 impact_data<-readRDS("Data/eicat_data.rds")
 
+
+species_list <- sort(unique(acacia_cube$data$scientificName))
+eicat_score_list <- impact_cat(
+  impact_data = eicat_acacia,
+  species_list = species_list,
+  trans = 1
+)
+eicat_cube<-left_join(acacia_cube$data,eicat_score_list, by="scientificName")
+eicat_cube<-na.omit(eicat_cube)
+
 data_cube_df =  acacia_cube$cube$data
 
 sbs.fun<-function(y){
@@ -610,11 +620,54 @@ bootstrap_cube <- function(
   return(bootstrap_samples_df)
 }
 
+prec_cum<-function(x){
+  x %>%
+    # keep only one occurrence of a species at each site per year
+    dplyr::distinct(taxonKey,year,cellCode,.keep_all = TRUE) %>%
+    dplyr::group_by(year,cellCode) %>%
+    dplyr::summarise(dplyr::across(max,sum),.groups = "drop") %>%
+    dplyr::group_by(year) %>%
+    dplyr::summarise(dplyr::across(max,sum),.groups = "drop") %>%
+    dplyr::mutate(max=max/cube$num_cells) %>%
+    dplyr::rename(diversity_val="max")
+}
 
 
-bootstrap_insect_data <- bootstrap_cube(
-  data_cube = acacia_cube$cube$data,
-  fun = boot_fun,
+bootstrap_data <- bootstrap_cube(
+  data_cube = eicat_cube,
+  fun = prec_cum,
   grouping_var = "year",
   samples = 1000,
   seed = 123)
+
+
+ci_df <- get_bootstrap_ci(
+  bootstrap_samples_df = bootstrap_data,
+  grouping_var = "year",
+  type = "perc",
+  conf = 0.95,
+  aggregate = TRUE)
+ci_df
+
+
+bias_df <- bootstrap_data %>%
+  distinct(year, estimate = est_original, `bootstrap estimate` = est_boot)
+
+estimate_df <- bias_df %>%
+  pivot_longer(cols = c("estimate", "bootstrap estimate"),
+               names_to = "Legend", values_to = "value") %>%
+  mutate(Legend = factor(Legend, levels = c("estimate", "bootstrap estimate"),
+                         ordered = TRUE))
+
+bootstrap_data %>%
+  ggplot(aes(x = year)) +
+  geom_violin(aes(y = rep_boot, group = year)) +
+  geom_segment(data = bias_df,
+               aes(xend = year, y = estimate, yend = `bootstrap estimate`),
+               colour = "cornflowerblue", linewidth = 1) +
+  geom_point(data = estimate_df, aes(y = value, shape = Legend),
+             colour = "firebrick", size = 3) +
+  labs(y = "evenness") +
+  theme(legend.position = "bottom") +
+  scale_y_continuous(limits = c(0, 3), breaks = seq(-10, 10, 0.25)) +
+  scale_x_continuous(breaks = sort(unique(bootstrap_data$year)))
