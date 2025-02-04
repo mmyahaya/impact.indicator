@@ -15,6 +15,9 @@ acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                        first_year=2015)
 impact_data<-readRDS("Data/eicat_data.rds")
 
+
+
+
 data_cube_df =  acacia_cube$cube$data
 
 sbs.fun<-function(y){
@@ -50,7 +53,7 @@ resize <- function(A, n) {
 
 full_species_list <- sort(unique(data_cube_df$scientificName))
 period <- data_cube_df %>%
-  pull(temporal_col_name) %>%
+  pull("year") %>%
   unique()
 
 data_list<-purrr::map(period,sbs.fun)
@@ -59,7 +62,7 @@ boot_fun<-function(x){
 
   sbs.taxon<-x
 
-  type="mean"
+  type="mean cumulative"
 
   species_list<-colnames(sbs.taxon)
 
@@ -292,10 +295,16 @@ perform_bootstrap_ts <- function(
 }
 
 
+boot::boot(
+  data = data_list[[1]],
+  statistic = boot_statistic,
+  R = 1000,
+  fun = boot_fun)
+
 A<-perform_bootstrap_ts(data_cube_df =  acacia_cube$cube$data,
                         fun = boot_fun,
                         ref_group = NA,
-                        samples = 100,
+                        samples = 500,
                         seed = 123)
 
 
@@ -471,6 +480,40 @@ bootstrap_data_final %>%
   labs(y = "impact") +
   scale_y_continuous( breaks = seq(-10, 10, 0.25)) +
   scale_x_continuous(breaks = sort(unique(bootstrap_data_final$year)))
+
+
+
+bootstrap_data_final_perc<-bootstrap_data_final %>%
+  filter(int_type=="percent") %>%
+  distinct(year,est_original,ll,ul)
+
+
+
+
+
+ggplot2::ggplot(data = bootstrap_data_final_perc, aes(x=year)) +
+  ggplot2::geom_line(ggplot2::aes(y = est_original, x = year),
+                     colour = "red",
+                     stat = "identity",
+                     linewidth = 1
+  ) +
+  ggplot2::labs(
+    title = "precautionary impact indicator for acacia",
+    y = "impact value"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(text = ggplot2::element_text(size = 14))+
+
+  geom_errorbar(aes(ymin = ll, ymax = ul),
+                colour = "green",
+                alpha = 0.3,
+                width = 1,
+                linewidth = 1)+
+  geom_ribbon(aes(ymin = predict(loess(ll ~ year)),
+                  ymax = predict(loess(ul ~ year))),
+              alpha=0.3,
+              fill="red")
+
 
 #' Perform bootstrapping over a data cube for a calculated statistic
 #'

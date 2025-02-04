@@ -2,7 +2,7 @@ Code to calculate the impact indicator
 ================
 Mukhtar Yahaya, Sabrina Kumschick, Sandra MacFadyen, Pietro Landi, Cang
 Hui
-2024-11-29
+2025-02-03
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
@@ -58,19 +58,19 @@ taxa_Acacia<-readRDS("Data/taxa_Acacia.rds")
 acacia_cube<-taxa_cube(taxa=taxa_Acacia,
                     region=SA.sf,
                     res=0.25,
-                    first_year=2010)
+                    first_year=2015)
 
 acacia_cube$cube
 #> 
 #> Simulated data cube for calculating biodiversity indicators
 #> 
-#> Date Range: 2010 - 2024 
-#> Number of cells: 369 
+#> Date Range: 2015 - 2024 
+#> Number of cells: 365 
 #> Grid reference system: custom 
 #> Coordinate range:
 #> [1] "Coordinates not provided"
 #> 
-#> Total number of observations: 5559 
+#> Total number of observations: 5320 
 #> Number of species represented: 25 
 #> Number of families represented: Data not present 
 #> 
@@ -78,20 +78,20 @@ acacia_cube$cube
 #> 
 #> First 10 rows of data (use n = to show more):
 #> 
-#> # A tibble: 5,559 × 6
-#>    scientificName   taxonKey minCoordinateUncertaintyInMe…¹  year cellCode   obs
-#>    <chr>               <dbl>                          <dbl> <dbl>    <int> <dbl>
-#>  1 Acacia implexa    2979232                              1  2010      206     1
-#>  2 Acacia cyclops    2980425                            122  2010      668     1
-#>  3 Acacia saligna    2978552                              1  2010      206     1
-#>  4 Acacia pycnantha  2978604                              1  2010      206     1
-#>  5 Acacia mearnsii   2979775                            110  2010      215     1
-#>  6 Acacia mearnsii   2979775                              1  2010      215     1
-#>  7 Acacia mearnsii   2979775                              8  2010     1376     1
-#>  8 Acacia saligna    2978552                              1  2011      206     1
-#>  9 Acacia saligna    2978552                             15  2011     1312     1
-#> 10 Acacia mearnsii   2979775                              1  2011      230     1
-#> # ℹ 5,549 more rows
+#> # A tibble: 5,320 × 6
+#>    scientificName        taxonKey minCoordinateUncertaint…¹  year cellCode   obs
+#>    <chr>                    <dbl>                     <dbl> <dbl>    <int> <dbl>
+#>  1 Acacia melanoxylon     2979000                         1  2015      206     1
+#>  2 Acacia piligera        2978295                         1  2015      206     1
+#>  3 Acacia podalyriifolia  2979014                         1  2015      206     1
+#>  4 Acacia elata           2973176                         1  2015      206     1
+#>  5 Acacia longifolia      2978730                         1  2015      206     1
+#>  6 Acacia saligna         2978552                         1  2015      341     1
+#>  7 Acacia melanoxylon     2979000                         1  2015      341     1
+#>  8 Acacia cyclops         2980425                        56  2015      221     1
+#>  9 Acacia cyclops         2980425                        38  2015      164     1
+#> 10 Acacia mearnsii        2979775                         1  2015      229     1
+#> # ℹ 5,310 more rows
 #> # ℹ abbreviated name: ¹​minCoordinateUncertaintyInMeters
 head(acacia_cube$coords)
 #>   siteID        X       Y
@@ -253,7 +253,7 @@ impact_value<-impact_indicator(cube=acacia_cube$cube,
                               col_species="scientific_name",
                               col_mechanism="impact_mechanism",
                               trans=1,
-                              type = "mean cumulative")
+                              type = "mean")
 
 ggplot(data = impact_value) +
   geom_line(aes(y = value, x = year),colour="red",
@@ -300,7 +300,7 @@ species_value %>%
     y = "impact score"
   )+
   theme(text=element_text(size=14))
-#> Warning: Removed 5 rows containing missing values or values outside the scale range
+#> Warning: Removed 3 rows containing missing values or values outside the scale range
 #> (`geom_line()`).
 ```
 
